@@ -42,7 +42,7 @@ export default function TrendingSidebar() {
       {/* Top Viral Section */}
       <div className="bg-gray-900 rounded-xl border border-red-900/50 p-4">
         <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-          <span>🚀</span> Potensi Viral Tertinggi
+          <span>🚀</span> Paling Viral
         </h2>
 
         {loading ? (
@@ -58,7 +58,10 @@ export default function TrendingSidebar() {
         ) : (
           <ul className="space-y-3">
             {topViral.map((item, idx) => (
-              <li key={idx} className="border-b border-gray-800 pb-2 last:border-0">
+              <li
+                key={idx}
+                className="border-b border-gray-800 pb-2 last:border-0"
+              >
                 <a
                   href={item.link}
                   target="_blank"
@@ -81,6 +84,11 @@ export default function TrendingSidebar() {
                       </span>
                     )}
                 </div>
+                {item.regions && item.regions.length > 0 && (
+                  <span className="text-xs text-emerald-600">
+                    📍 {item.regions.join(", ")}
+                  </span>
+                )}
               </li>
             ))}
           </ul>
@@ -90,7 +98,7 @@ export default function TrendingSidebar() {
       {/* Google Trends */}
       <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
         <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-          <span>🔥</span> Google Trends Indonesia
+          <span>🔥</span> Google Trends
         </h2>
 
         {loading ? (
@@ -126,10 +134,10 @@ export default function TrendingSidebar() {
         )}
       </div>
 
-      {/* Platform Legend */}
+      {/* Info */}
       <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
         <h3 className="text-sm font-semibold text-gray-400 mb-2">
-          Platform Sosmed
+          Prediksi Platform
         </h3>
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 text-xs text-gray-400">
@@ -151,27 +159,12 @@ export default function TrendingSidebar() {
         </div>
 
         <div className="mt-3 pt-3 border-t border-gray-800">
-          <h3 className="text-sm font-semibold text-gray-400 mb-2">
-            Sumber Media
-          </h3>
-          <div className="flex flex-wrap gap-1">
-            {[
-              "Sumatera Utara",
-              "Aceh",
-              "Sumatera Barat",
-              "Riau",
-              "Kepulauan Riau",
-            ].map((p) => (
-              <span
-                key={p}
-                className="text-xs px-2 py-0.5 bg-gray-800 text-gray-400 rounded"
-              >
-                {p}
-              </span>
-            ))}
-          </div>
-          <p className="text-xs text-gray-600 mt-2">
-            51+ portal media terverifikasi Dewan Pers
+          <p className="text-xs text-gray-500">
+            <strong className="text-gray-400">56 portal</strong> media siber
+            terverifikasi Dewan Pers • Sumatera Utara
+          </p>
+          <p className="text-xs text-gray-600 mt-1">
+            8 Kota • 25 Kabupaten
           </p>
         </div>
       </div>

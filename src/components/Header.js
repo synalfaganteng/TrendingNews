@@ -10,10 +10,10 @@ export default function Header() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">
-              Trending Sumatera
+              Trending Sumut
             </h1>
             <p className="text-xs text-gray-400">
-              Berita real-time dari media terverifikasi Dewan Pers
+              Berita real-time Sumatera Utara • 56 portal terverifikasi Dewan Pers
             </p>
           </div>
         </div>

@@ -2,13 +2,43 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-const PROVINCES = [
-  "Semua",
-  "Sumatera Utara",
-  "Aceh",
-  "Sumatera Barat",
-  "Riau",
-  "Kepulauan Riau",
+const KOTA = [
+  "Medan",
+  "Binjai",
+  "Gunungsitoli",
+  "Padangsidimpuan",
+  "Pematangsiantar",
+  "Sibolga",
+  "Tanjungbalai",
+  "Tebing Tinggi",
+];
+
+const KABUPATEN = [
+  "Asahan",
+  "Batu Bara",
+  "Dairi",
+  "Deli Serdang",
+  "Humbang Hasundutan",
+  "Karo",
+  "Labuhanbatu",
+  "Labuhanbatu Selatan",
+  "Labuhanbatu Utara",
+  "Langkat",
+  "Mandailing Natal",
+  "Nias",
+  "Nias Barat",
+  "Nias Selatan",
+  "Nias Utara",
+  "Padang Lawas",
+  "Padang Lawas Utara",
+  "Pakpak Bharat",
+  "Samosir",
+  "Serdang Bedagai",
+  "Simalungun",
+  "Tapanuli Selatan",
+  "Tapanuli Tengah",
+  "Tapanuli Utara",
+  "Toba",
 ];
 
 const SORT_OPTIONS = [
@@ -73,13 +103,11 @@ function ViralBadge({ viral }) {
   else bgColor = "bg-gray-600";
 
   return (
-    <div className="flex items-center gap-1.5">
-      <span
-        className={`${bgColor} text-white text-xs font-bold px-2 py-0.5 rounded-full`}
-      >
-        {viral.viralScore}
-      </span>
-    </div>
+    <span
+      className={`${bgColor} text-white text-xs font-bold px-2 py-0.5 rounded-full`}
+    >
+      {viral.viralScore}
+    </span>
   );
 }
 
@@ -104,15 +132,16 @@ function PlatformBadges({ platforms }) {
 export default function NewsFeed() {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [province, setProvince] = useState("Semua");
+  const [region, setRegion] = useState("");
   const [sort, setSort] = useState("viral");
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [showAllRegions, setShowAllRegions] = useState(false);
 
   const fetchNews = useCallback(async () => {
     try {
       const params = new URLSearchParams({ limit: "150", sort });
-      if (province !== "Semua") {
-        params.set("province", province);
+      if (region) {
+        params.set("region", region);
       }
       const res = await fetch(`/api/news?${params.toString()}`);
       const data = await res.json();
@@ -123,7 +152,7 @@ export default function NewsFeed() {
     } finally {
       setLoading(false);
     }
-  }, [province, sort]);
+  }, [region, sort]);
 
   useEffect(() => {
     setLoading(true);
@@ -136,44 +165,86 @@ export default function NewsFeed() {
 
   return (
     <section>
-      {/* Filter & Sort Bar */}
-      <div className="space-y-3 mb-4">
-        <div className="flex flex-wrap items-center gap-2">
-          {PROVINCES.map((p) => (
+      {/* Sort Bar */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          {SORT_OPTIONS.map((opt) => (
             <button
-              key={p}
-              onClick={() => setProvince(p)}
+              key={opt.value}
+              onClick={() => setSort(opt.value)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                province === p
+                sort === opt.value
                   ? "bg-red-600 text-white"
                   : "bg-gray-800 text-gray-300 hover:bg-gray-700"
               }`}
             >
-              {p}
+              {opt.label}
             </button>
           ))}
         </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {SORT_OPTIONS.map((opt) => (
+        {lastUpdated && (
+          <span className="text-xs text-gray-500">
+            Update: {new Date(lastUpdated).toLocaleTimeString("id-ID")}
+          </span>
+        )}
+      </div>
+
+      {/* Region Filter */}
+      <div className="mb-4 bg-gray-900 rounded-xl p-3 border border-gray-800">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-gray-400 font-medium">
+            Filter Wilayah:
+          </span>
+          <button
+            onClick={() => setShowAllRegions(!showAllRegions)}
+            className="text-xs text-red-400 hover:text-red-300"
+          >
+            {showAllRegions ? "Sembunyikan" : "Tampilkan Semua"}
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={() => setRegion("")}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+              region === ""
+                ? "bg-red-600 text-white"
+                : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+            }`}
+          >
+            Semua
+          </button>
+
+          {/* Kota */}
+          {KOTA.map((k) => (
+            <button
+              key={k}
+              onClick={() => setRegion(k)}
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                region === k
+                  ? "bg-red-600 text-white"
+                  : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+              }`}
+            >
+              {k}
+            </button>
+          ))}
+
+          {/* Kabupaten (show/hide) */}
+          {showAllRegions &&
+            KABUPATEN.map((k) => (
               <button
-                key={opt.value}
-                onClick={() => setSort(opt.value)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  sort === opt.value
-                    ? "bg-gray-700 text-white border border-gray-600"
-                    : "bg-gray-800/50 text-gray-400 hover:bg-gray-800"
+                key={k}
+                onClick={() => setRegion(k)}
+                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                  region === k
+                    ? "bg-red-600 text-white"
+                    : "bg-gray-800/60 text-gray-500 hover:bg-gray-700"
                 }`}
               >
-                {opt.label}
+                {k}
               </button>
             ))}
-          </div>
-          {lastUpdated && (
-            <span className="text-xs text-gray-500">
-              Update: {new Date(lastUpdated).toLocaleTimeString("id-ID")}
-            </span>
-          )}
         </div>
       </div>
 
@@ -193,9 +264,11 @@ export default function NewsFeed() {
       ) : news.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <p className="text-lg">Tidak ada berita dalam 3 jam terakhir</p>
-          <p className="text-sm mt-1">
-            untuk filter &quot;{province}&quot;
-          </p>
+          {region && (
+            <p className="text-sm mt-1">
+              untuk wilayah &quot;{region}&quot;
+            </p>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
@@ -204,7 +277,7 @@ export default function NewsFeed() {
               key={`${item.link}-${idx}`}
               className={`bg-gray-900 rounded-xl p-4 border transition-colors ${
                 item.viral && item.viral.viralScore >= 70
-                  ? "border-red-800/60 bg-gray-900/80"
+                  ? "border-red-800/60"
                   : item.viral && item.viral.viralScore >= 50
                     ? "border-orange-800/40"
                     : "border-gray-800 hover:border-gray-700"
@@ -238,10 +311,14 @@ export default function NewsFeed() {
                     <span className="text-xs text-gray-500">
                       {item.source}
                     </span>
-                    <span className="text-xs text-gray-600">•</span>
-                    <span className="text-xs text-gray-500">
-                      {item.province}
-                    </span>
+                    {item.regions && item.regions.length > 0 && (
+                      <>
+                        <span className="text-xs text-gray-600">•</span>
+                        <span className="text-xs text-emerald-500">
+                          📍 {item.regions.join(", ")}
+                        </span>
+                      </>
+                    )}
                   </div>
                   {/* Platform predictions */}
                   {item.viral &&

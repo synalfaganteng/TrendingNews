@@ -1,9 +1,9 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Trending Sumatera - Berita Real-Time",
+  title: "Trending Sumut - Berita Real-Time Sumatera Utara",
   description:
-    "Aggregator berita real-time dari media terverifikasi Dewan Pers untuk wilayah Sumatera",
+    "Aggregator berita real-time dari 56 portal media terverifikasi Dewan Pers untuk Sumatera Utara. Filter per kota/kabupaten, viral scoring, prediksi platform sosmed.",
 };
 
 export default function RootLayout({ children }) {
