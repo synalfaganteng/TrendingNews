@@ -11,6 +11,25 @@ const PROVINCES = [
   "Kepulauan Riau",
 ];
 
+const SORT_OPTIONS = [
+  { value: "viral", label: "🔥 Potensi Viral" },
+  { value: "time", label: "🕐 Terbaru" },
+];
+
+const PLATFORM_ICONS = {
+  tiktok: "🎵",
+  twitter: "𝕏",
+  instagram: "📷",
+  facebook: "👥",
+};
+
+const PLATFORM_COLORS = {
+  tiktok: "bg-pink-900/50 text-pink-400 border-pink-800",
+  twitter: "bg-sky-900/50 text-sky-400 border-sky-800",
+  instagram: "bg-fuchsia-900/50 text-fuchsia-400 border-fuchsia-800",
+  facebook: "bg-blue-900/50 text-blue-400 border-blue-800",
+};
+
 function timeAgo(timestamp) {
   if (!timestamp) return "Baru saja";
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -38,21 +57,60 @@ function getTypeBadge(type) {
     default:
       return (
         <span className="px-2 py-0.5 text-xs rounded bg-purple-900/50 text-purple-400 border border-purple-800">
-          ✓ Media Terverifikasi
+          ✓ Terverifikasi
         </span>
       );
   }
+}
+
+function ViralBadge({ viral }) {
+  if (!viral) return null;
+
+  let bgColor;
+  if (viral.viralScore >= 70) bgColor = "bg-red-600";
+  else if (viral.viralScore >= 50) bgColor = "bg-orange-600";
+  else if (viral.viralScore >= 30) bgColor = "bg-yellow-600";
+  else bgColor = "bg-gray-600";
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <span
+        className={`${bgColor} text-white text-xs font-bold px-2 py-0.5 rounded-full`}
+      >
+        {viral.viralScore}
+      </span>
+    </div>
+  );
+}
+
+function PlatformBadges({ platforms }) {
+  if (!platforms || platforms.length === 0) return null;
+
+  return (
+    <div className="flex items-center gap-1">
+      {platforms.map(({ platform }) => (
+        <span
+          key={platform}
+          className={`px-1.5 py-0.5 text-xs rounded border ${PLATFORM_COLORS[platform]}`}
+          title={`Berpotensi viral di ${platform}`}
+        >
+          {PLATFORM_ICONS[platform]} {platform}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 export default function NewsFeed() {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [province, setProvince] = useState("Semua");
+  const [sort, setSort] = useState("viral");
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const fetchNews = useCallback(async () => {
     try {
-      const params = new URLSearchParams({ limit: "150" });
+      const params = new URLSearchParams({ limit: "150", sort });
       if (province !== "Semua") {
         params.set("province", province);
       }
@@ -65,7 +123,7 @@ export default function NewsFeed() {
     } finally {
       setLoading(false);
     }
-  }, [province]);
+  }, [province, sort]);
 
   useEffect(() => {
     setLoading(true);
@@ -78,26 +136,45 @@ export default function NewsFeed() {
 
   return (
     <section>
-      {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        {PROVINCES.map((p) => (
-          <button
-            key={p}
-            onClick={() => setProvince(p)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              province === p
-                ? "bg-red-600 text-white"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-            }`}
-          >
-            {p}
-          </button>
-        ))}
-        {lastUpdated && (
-          <span className="ml-auto text-xs text-gray-500">
-            Diperbarui: {new Date(lastUpdated).toLocaleTimeString("id-ID")}
-          </span>
-        )}
+      {/* Filter & Sort Bar */}
+      <div className="space-y-3 mb-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {PROVINCES.map((p) => (
+            <button
+              key={p}
+              onClick={() => setProvince(p)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                province === p
+                  ? "bg-red-600 text-white"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {SORT_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setSort(opt.value)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  sort === opt.value
+                    ? "bg-gray-700 text-white border border-gray-600"
+                    : "bg-gray-800/50 text-gray-400 hover:bg-gray-800"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {lastUpdated && (
+            <span className="text-xs text-gray-500">
+              Update: {new Date(lastUpdated).toLocaleTimeString("id-ID")}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* News List */}
@@ -125,10 +202,24 @@ export default function NewsFeed() {
           {news.map((item, idx) => (
             <article
               key={`${item.link}-${idx}`}
-              className="bg-gray-900 rounded-xl p-4 border border-gray-800 hover:border-gray-700 transition-colors"
+              className={`bg-gray-900 rounded-xl p-4 border transition-colors ${
+                item.viral && item.viral.viralScore >= 70
+                  ? "border-red-800/60 bg-gray-900/80"
+                  : item.viral && item.viral.viralScore >= 50
+                    ? "border-orange-800/40"
+                    : "border-gray-800 hover:border-gray-700"
+              }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    {item.viral && <ViralBadge viral={item.viral} />}
+                    {item.viral && item.viral.viralScore >= 50 && (
+                      <span className="text-xs text-orange-400">
+                        {item.viral.viralLevel}
+                      </span>
+                    )}
+                  </div>
                   <a
                     href={item.link}
                     target="_blank"
@@ -152,6 +243,14 @@ export default function NewsFeed() {
                       {item.province}
                     </span>
                   </div>
+                  {/* Platform predictions */}
+                  {item.viral &&
+                    item.viral.platforms &&
+                    item.viral.platforms.length > 0 && (
+                      <div className="mt-2">
+                        <PlatformBadges platforms={item.viral.platforms} />
+                      </div>
+                    )}
                 </div>
                 <span className="text-xs text-gray-500 whitespace-nowrap shrink-0">
                   {timeAgo(item.pubDate)}

@@ -2,89 +2,178 @@
 
 import { useState, useEffect } from "react";
 
+const PLATFORM_ICONS = {
+  tiktok: "🎵 TikTok",
+  twitter: "𝕏 Twitter",
+  instagram: "📷 Instagram",
+  facebook: "👥 Facebook",
+};
+
 export default function TrendingSidebar() {
   const [trends, setTrends] = useState([]);
+  const [topViral, setTopViral] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchTrends() {
+    async function fetchData() {
       try {
-        const res = await fetch("/api/trending");
-        const data = await res.json();
-        setTrends(data.items || []);
+        const [trendsRes, newsRes] = await Promise.all([
+          fetch("/api/trending"),
+          fetch("/api/news?sort=viral&limit=5"),
+        ]);
+        const trendsData = await trendsRes.json();
+        const newsData = await newsRes.json();
+        setTrends(trendsData.items || []);
+        setTopViral(newsData.items || []);
       } catch (err) {
-        console.error("Gagal fetch trending:", err);
+        console.error("Gagal fetch:", err);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchTrends();
-    const interval = setInterval(fetchTrends, 60000);
+    fetchData();
+    const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
-      <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-        <span>🔥</span> Google Trends Indonesia
-      </h2>
+    <div className="space-y-4">
+      {/* Top Viral Section */}
+      <div className="bg-gray-900 rounded-xl border border-red-900/50 p-4">
+        <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+          <span>🚀</span> Potensi Viral Tertinggi
+        </h2>
 
-      {loading ? (
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="h-3 bg-gray-800 rounded w-full mb-1" />
-            </div>
-          ))}
-        </div>
-      ) : trends.length === 0 ? (
-        <p className="text-gray-500 text-sm">Tidak ada data trending</p>
-      ) : (
-        <ul className="space-y-2">
-          {trends.slice(0, 20).map((item, idx) => (
-            <li key={idx}>
-              <a
-                href={item.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-start gap-2 group"
-              >
-                <span className="text-xs text-gray-600 font-mono mt-0.5 shrink-0">
-                  {String(idx + 1).padStart(2, "0")}
-                </span>
-                <span className="text-sm text-gray-300 group-hover:text-red-400 transition-colors line-clamp-2">
+        {loading ? (
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-3 bg-gray-800 rounded w-full mb-1" />
+              </div>
+            ))}
+          </div>
+        ) : topViral.length === 0 ? (
+          <p className="text-gray-500 text-sm">Belum ada data</p>
+        ) : (
+          <ul className="space-y-3">
+            {topViral.map((item, idx) => (
+              <li key={idx} className="border-b border-gray-800 pb-2 last:border-0">
+                <a
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-gray-200 hover:text-red-400 transition-colors line-clamp-2 font-medium"
+                >
                   {item.title}
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      )}
+                </a>
+                <div className="flex items-center gap-2 mt-1">
+                  {item.viral && (
+                    <span className="text-xs font-bold text-red-400">
+                      Score: {item.viral.viralScore}
+                    </span>
+                  )}
+                  {item.viral &&
+                    item.viral.platforms &&
+                    item.viral.platforms[0] && (
+                      <span className="text-xs text-gray-500">
+                        → {PLATFORM_ICONS[item.viral.platforms[0].platform]}
+                      </span>
+                    )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-      <div className="mt-4 pt-3 border-t border-gray-800">
+      {/* Google Trends */}
+      <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
+        <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+          <span>🔥</span> Google Trends Indonesia
+        </h2>
+
+        {loading ? (
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-3 bg-gray-800 rounded w-full mb-1" />
+              </div>
+            ))}
+          </div>
+        ) : trends.length === 0 ? (
+          <p className="text-gray-500 text-sm">Tidak ada data trending</p>
+        ) : (
+          <ul className="space-y-2">
+            {trends.slice(0, 15).map((item, idx) => (
+              <li key={idx}>
+                <a
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-2 group"
+                >
+                  <span className="text-xs text-gray-600 font-mono mt-0.5 shrink-0">
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-sm text-gray-300 group-hover:text-red-400 transition-colors line-clamp-2">
+                    {item.title}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Platform Legend */}
+      <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
         <h3 className="text-sm font-semibold text-gray-400 mb-2">
-          Sumber Media
+          Platform Sosmed
         </h3>
-        <div className="flex flex-wrap gap-1">
-          {[
-            "Sumatera Utara",
-            "Aceh",
-            "Sumatera Barat",
-            "Riau",
-            "Kepulauan Riau",
-          ].map((p) => (
-            <span
-              key={p}
-              className="text-xs px-2 py-0.5 bg-gray-800 text-gray-400 rounded"
-            >
-              {p}
-            </span>
-          ))}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <span>🎵</span>
+            <span>TikTok — Drama, emosional, heboh</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <span>𝕏</span>
+            <span>Twitter — Politik, breaking, data</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <span>📷</span>
+            <span>Instagram — Visual, wisata, lifestyle</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <span>👥</span>
+            <span>Facebook — Lokal, komunitas, keluarga</span>
+          </div>
         </div>
-        <p className="text-xs text-gray-600 mt-2">
-          23+ media terverifikasi Dewan Pers
-        </p>
+
+        <div className="mt-3 pt-3 border-t border-gray-800">
+          <h3 className="text-sm font-semibold text-gray-400 mb-2">
+            Sumber Media
+          </h3>
+          <div className="flex flex-wrap gap-1">
+            {[
+              "Sumatera Utara",
+              "Aceh",
+              "Sumatera Barat",
+              "Riau",
+              "Kepulauan Riau",
+            ].map((p) => (
+              <span
+                key={p}
+                className="text-xs px-2 py-0.5 bg-gray-800 text-gray-400 rounded"
+              >
+                {p}
+              </span>
+            ))}
+          </div>
+          <p className="text-xs text-gray-600 mt-2">
+            51+ portal media terverifikasi Dewan Pers
+          </p>
+        </div>
       </div>
     </div>
   );
