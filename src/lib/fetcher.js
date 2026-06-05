@@ -4,8 +4,8 @@ import {
   GOOGLE_TRENDS_RSS,
   GOOGLE_NEWS_FEEDS,
   ALL_REGIONS,
-  SUMUT_KEYWORDS,
 } from "./sources";
+import { isRelevantToSumut } from "./region-filter";
 
 const parser = new RSSParser({
   timeout: 8000,
@@ -25,18 +25,6 @@ function detectRegions(text) {
   const lower = text.toLowerCase();
   return ALL_REGIONS.filter((region) =>
     lower.includes(region.toLowerCase())
-  );
-}
-
-/**
- * Check if a news item is relevant to Sumatera Utara
- * Returns true if the text mentions any Sumut keyword
- */
-function isRelevantToSumut(text) {
-  if (!text) return false;
-  const lower = text.toLowerCase();
-  return SUMUT_KEYWORDS.some((keyword) =>
-    lower.includes(keyword.toLowerCase())
   );
 }
 
@@ -72,7 +60,7 @@ async function fetchFeed(url, sourceName, province, type = "news") {
           type,
           snippet,
           regions,
-          _fullText: fullText, // internal, for filtering
+          _fullText: fullText,
         };
       })
       .filter((item) => {
@@ -99,14 +87,14 @@ export async function fetchAllNews() {
     );
   }
 
-  // 2. Google News regional feeds (already Sumut-focused)
+  // 2. Google News regional feeds
   for (const gn of GOOGLE_NEWS_FEEDS) {
     promises.push(
       fetchFeed(gn.rss, "Google News", "Sumatera Utara", "google-news")
     );
   }
 
-  // 3. Google Trends (national, will be filtered)
+  // 3. Google Trends (national)
   promises.push(
     fetchFeed(GOOGLE_TRENDS_RSS, "Google Trends", "Indonesia", "trending")
   );
@@ -115,20 +103,19 @@ export async function fetchAllNews() {
   let allItems = results.flat();
 
   /**
-   * FILTER LOGIC:
-   * - Portal Sumatera Utara → auto-lolos (semua beritanya relevan)
-   * - Portal provinsi lain (Aceh, Sumbar, Riau, Kepri) → hanya lolos
-   *   jika menyebut kota/kabupaten Sumut di judul/konten
-   * - Google News → sudah di-query "Sumatera Utara", auto-lolos
-   * - Google Trends → hanya lolos jika mention Sumut
+   * FILTER UTAMA:
+   * SEMUA berita (termasuk dari portal Sumut) harus menyebut
+   * wilayah Sumatera Utara di judul atau kontennya.
+   *
+   * Contoh yang DIBUANG:
+   * - Tribun Medan publish berita "Santri dibakar di Lombok" → ❌
+   * - Waspada publish berita "Jokowi di Jakarta" → ❌
+   *
+   * Contoh yang LOLOS:
+   * - Tribun Medan "Banjir di Medan" → ✅
+   * - Serambi Aceh "Gubernur Sumut kunjungi Langkat" → ✅
    */
-  allItems = allItems.filter((item) => {
-    // Portal Sumut & Google News Sumut → auto-lolos
-    if (item.province === "Sumatera Utara") return true;
-
-    // Portal lain & Google Trends → harus mention Sumut
-    return isRelevantToSumut(item._fullText);
-  });
+  allItems = allItems.filter((item) => isRelevantToSumut(item._fullText));
 
   // Remove internal field
   allItems = allItems.map(({ _fullText, ...rest }) => rest);
@@ -145,7 +132,7 @@ export async function fetchAllNews() {
 }
 
 /**
- * Get just Google Trends data (filtered to Sumut-relevant)
+ * Get Google Trends data (national, unfiltered — for sidebar)
  */
 export async function fetchTrending() {
   const items = await fetchFeed(
@@ -154,6 +141,5 @@ export async function fetchTrending() {
     "Indonesia",
     "trending"
   );
-  // For trending, show all (national interest) but mark Sumut-relevant
   return items.map(({ _fullText, ...rest }) => rest);
 }
