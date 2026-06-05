@@ -67,31 +67,61 @@ export default function TopBar({ analytics, spikes }) {
       {/* Spike cards */}
       {spikes && spikes.length > 0 && (
         <div className="rounded-2xl bg-gradient-to-br from-red-950/40 to-pink-950/20 border border-red-500/20 p-4">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-white mb-3">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-white mb-1">
             <span>📈</span> Topik Sedang Ramai
           </h2>
+          <p className="text-sm text-gray-400 mb-3">
+            Diurutkan dari yang paling cepat menyebar (velocity tertinggi)
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {spikes.slice(0, 4).map((spike, idx) => (
-              <a
-                key={idx}
-                href={spike.representative?.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block p-3 rounded-xl bg-black/40 border border-white/10 hover:border-red-500/50 transition-colors"
-              >
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="px-2 py-0.5 rounded-lg bg-red-500/20 text-red-300 text-sm font-bold">
-                    {spike.sourceCount} portal
-                  </span>
-                  <span className="text-sm text-gray-400">
-                    {spike.articleCount} artikel
-                  </span>
-                </div>
-                <p className="text-sm font-medium text-white line-clamp-2 leading-snug">
-                  {spike.representative?.title}
-                </p>
-              </a>
-            ))}
+            {spikes.slice(0, 4).map((spike, idx) => {
+              const windowStyles = {
+                green: "bg-green-500/15 text-green-300 border-green-500/40",
+                yellow: "bg-yellow-500/15 text-yellow-300 border-yellow-500/40",
+                red: "bg-red-500/15 text-red-300 border-red-500/40",
+              };
+              return (
+                <a
+                  key={idx}
+                  href={spike.representative?.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block p-3 rounded-xl bg-black/40 border border-white/10 hover:border-red-500/50 transition-colors"
+                >
+                  {/* Opportunity window label */}
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span
+                      className={`px-2 py-0.5 rounded-lg text-sm font-bold border ${
+                        windowStyles[spike.windowColor] || windowStyles.green
+                      }`}
+                    >
+                      {spike.windowLabel}
+                    </span>
+                  </div>
+
+                  <p className="text-sm font-medium text-white line-clamp-2 leading-snug mb-2">
+                    {spike.representative?.title}
+                  </p>
+
+                  {/* Velocity metrics */}
+                  <div className="flex items-center gap-3 text-sm flex-wrap">
+                    {spike.velocity != null && (
+                      <span className="inline-flex items-center gap-1 text-orange-300 font-semibold">
+                        ⚡ {spike.velocity} portal/jam
+                      </span>
+                    )}
+                    <span className="text-gray-400">
+                      {spike.sourceCount} portal · {spike.articleCount} artikel
+                    </span>
+                  </div>
+                  {spike.minsSinceLatest != null && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Update terakhir {spike.minsSinceLatest} menit lalu
+                    </p>
+                  )}
+                </a>
+              );
+            })}
           </div>
         </div>
       )}

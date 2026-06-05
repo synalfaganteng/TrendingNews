@@ -85,15 +85,71 @@ export function detectSpikes(items) {
         return (b.pubDate || 0) - (a.pubDate || 0);
       });
 
+      // ===== VELOCITY: kecepatan penyebaran =====
+      // Hitung rentang waktu antara artikel pertama & terakhir di cluster
+      const dates = c.items
+        .map((i) => i.pubDate)
+        .filter((d) => d && Number.isFinite(d))
+        .sort((a, b) => a - b);
+
+      let velocity = null; // portal per jam
+      let spanMinutes = null;
+      let windowLabel = "🟢 Masih Worth Digarap";
+      let windowColor = "green";
+
+      if (dates.length >= 2) {
+        const firstDate = dates[0];
+        const lastDate = dates[dates.length - 1];
+        spanMinutes = Math.max(1, (lastDate - firstDate) / 60000);
+        const spanHours = spanMinutes / 60;
+
+        // Velocity = jumlah portal unik / jam sejak berita pertama
+        velocity = c.sources.size / Math.max(spanHours, 0.25);
+
+        // ===== OPPORTUNITY WINDOW =====
+        // Kombinasi: berapa portal sudah nulis + seberapa cepat
+        // Logika:
+        // - Sedikit portal (<=3) + baru saja (span pendek) = golden window
+        // - Banyak portal (>=8) = sudah jenuh, telat
+        // - Tengah = mulai ramai
+        if (c.sources.size >= 8) {
+          windowLabel = "🔴 Sudah Jenuh";
+          windowColor = "red";
+        } else if (c.sources.size >= 4) {
+          windowLabel = "🟡 Mulai Ramai";
+          windowColor = "yellow";
+        } else {
+          windowLabel = "🟢 Masih Worth Digarap";
+          windowColor = "green";
+        }
+      }
+
+      // Berapa lama sejak artikel TERAKHIR (untuk freshness)
+      const newestDate = dates.length > 0 ? dates[dates.length - 1] : null;
+      const minsSinceLatest = newestDate
+        ? Math.floor((Date.now() - newestDate) / 60000)
+        : null;
+
       return {
         keywords: topKeywords,
         sourceCount: c.sources.size,
         articleCount: c.items.length,
         representative: sorted[0],
         intensity: c.sources.size * 2 + c.items.length,
+        velocity: velocity ? Math.round(velocity * 10) / 10 : null,
+        spanMinutes: spanMinutes ? Math.round(spanMinutes) : null,
+        windowLabel,
+        windowColor,
+        minsSinceLatest,
       };
     })
-    .sort((a, b) => b.intensity - a.intensity);
+    // Sort by velocity (kecepatan) lalu intensity
+    .sort((a, b) => {
+      const va = a.velocity || 0;
+      const vb = b.velocity || 0;
+      if (vb !== va) return vb - va;
+      return b.intensity - a.intensity;
+    });
 
   return spikes;
 }

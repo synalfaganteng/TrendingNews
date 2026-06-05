@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const PROVINCES = [
   { value: "", label: "Semua" },
@@ -42,14 +42,14 @@ function ScoreBadge({ score }) {
   );
 }
 
-function NewsCard({ item }) {
+function NewsCard({ item, isNew }) {
   const v = item.viral || {};
   const isHot = v.viralScore >= 75;
   const isPotential = v.viralScore >= 55;
 
   return (
     <article
-      className={`rounded-2xl border p-4 sm:p-5 transition-colors animate-fade-up ${
+      className={`relative rounded-2xl border p-4 sm:p-5 transition-colors animate-fade-up ${
         isHot
           ? "bg-red-950/20 border-red-500/40"
           : isPotential
@@ -57,6 +57,13 @@ function NewsCard({ item }) {
             : "bg-white/[0.03] border-white/10 hover:border-white/25"
       }`}
     >
+      {/* NEW badge */}
+      {isNew && (
+        <span className="absolute -top-2 -left-2 px-2.5 py-1 rounded-lg bg-green-500 text-white text-xs font-black shadow-lg animate-fade-up">
+          BARU ✨
+        </span>
+      )}
+
       {/* Top row: score + category */}
       <div className="flex items-center gap-2 mb-2.5 flex-wrap">
         <ScoreBadge score={v.viralScore} />
@@ -127,34 +134,93 @@ function NewsCard({ item }) {
 
 export default function NewsFeed() {
   const [news, setNews] = useState([]);
+  const [pending, setPending] = useState([]); // berita baru yang belum ditampilkan
+  const [newLinks, setNewLinks] = useState(new Set()); // link berita baru (untuk badge)
   const [loading, setLoading] = useState(true);
   const [province, setProvince] = useState("");
   const [sort, setSort] = useState("viral");
   const [count, setCount] = useState(0);
   const [updated, setUpdated] = useState(null);
 
-  const fetchNews = useCallback(async () => {
+  // Simpan link yang sedang tampil untuk deteksi berita baru
+  const shownLinksRef = useRef(new Set());
+
+  const doFetch = useCallback(async () => {
+    const params = new URLSearchParams({ limit: "100", sort });
+    if (province) params.set("province", province);
+    const res = await fetch(`/api/news?${params}`);
+    return res.json();
+  }, [province, sort]);
+
+  // Fetch awal / saat filter berubah → langsung tampilkan
+  const initialLoad = useCallback(async () => {
     try {
-      const params = new URLSearchParams({ limit: "100", sort });
-      if (province) params.set("province", province);
-      const res = await fetch(`/api/news?${params}`);
-      const data = await res.json();
-      setNews(data.items || []);
+      setLoading(true);
+      const data = await doFetch();
+      const items = data.items || [];
+      setNews(items);
       setCount(data.count || 0);
       setUpdated(data.lastUpdated);
+      setPending([]);
+      setNewLinks(new Set());
+      shownLinksRef.current = new Set(items.map((i) => i.link));
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [province, sort]);
+  }, [doFetch]);
+
+  // Polling → simpan ke pending kalau ada berita baru (tidak ganggu scroll)
+  const pollUpdate = useCallback(async () => {
+    try {
+      const data = await doFetch();
+      const items = data.items || [];
+      setUpdated(data.lastUpdated);
+
+      // Deteksi berita yang belum pernah tampil
+      const fresh = items.filter((i) => !shownLinksRef.current.has(i.link));
+
+      if (fresh.length > 0) {
+        setPending(items); // simpan snapshot terbaru
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, [doFetch]);
 
   useEffect(() => {
-    setLoading(true);
-    fetchNews();
-    const i = setInterval(fetchNews, 60000);
+    initialLoad();
+  }, [initialLoad]);
+
+  useEffect(() => {
+    const i = setInterval(pollUpdate, 30000); // cek tiap 30 detik
     return () => clearInterval(i);
-  }, [fetchNews]);
+  }, [pollUpdate]);
+
+  // Tampilkan berita baru saat user klik tombol
+  const revealNew = () => {
+    if (pending.length === 0) return;
+    const freshLinks = new Set(
+      pending
+        .filter((i) => !shownLinksRef.current.has(i.link))
+        .map((i) => i.link)
+    );
+    setNews(pending);
+    setCount(pending.length);
+    setNewLinks(freshLinks);
+    shownLinksRef.current = new Set(pending.map((i) => i.link));
+    setPending([]);
+    // Scroll ke atas feed
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Hapus highlight "BARU" setelah 8 detik
+    setTimeout(() => setNewLinks(new Set()), 8000);
+  };
+
+  // Hitung berapa berita baru di pending
+  const newCount = pending.filter(
+    (i) => !shownLinksRef.current.has(i.link)
+  ).length;
 
   return (
     <section>
@@ -206,6 +272,19 @@ export default function NewsFeed() {
         </div>
       </div>
 
+      {/* Sticky "berita baru" indicator */}
+      {newCount > 0 && (
+        <div className="sticky top-[76px] z-30 flex justify-center mb-3">
+          <button
+            onClick={revealNew}
+            className="px-5 py-2.5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 text-white text-base font-bold shadow-xl shadow-pink-500/30 flex items-center gap-2 hover:scale-105 transition-transform animate-fade-up"
+          >
+            <span className="animate-bounce">↑</span>
+            {newCount} Berita Baru Masuk — Klik untuk Lihat
+          </button>
+        </div>
+      )}
+
       {/* List */}
       {loading ? (
         <div className="space-y-3">
@@ -226,7 +305,11 @@ export default function NewsFeed() {
       ) : (
         <div className="space-y-3">
           {news.map((item, idx) => (
-            <NewsCard key={`${item.link}-${idx}`} item={item} />
+            <NewsCard
+              key={`${item.link}-${idx}`}
+              item={item}
+              isNew={newLinks.has(item.link)}
+            />
           ))}
         </div>
       )}
