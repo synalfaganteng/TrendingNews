@@ -1,9 +1,9 @@
-import { fetchAllNews, fetchDedupPool } from "@/src/lib/fetcher";
+import { fetchAllNews } from "@/src/lib/fetcher";
 import { attachViralScores } from "@/src/lib/viral-scorer";
-import { detectDuplicates } from "@/src/lib/dedup";
+import { findOriginalsForItems } from "@/src/lib/origin-finder";
 
-export const revalidate = 30;
-export const maxDuration = 30;
+export const revalidate = 60;
+export const maxDuration = 60;
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -11,19 +11,14 @@ export async function GET(request) {
   const region = searchParams.get("region");
   const sort = searchParams.get("sort") || "viral";
   const limit = parseInt(searchParams.get("limit") || "100", 10);
+  const skipOrigin = searchParams.get("skipOrigin") === "true";
 
-  const [displayItems, dedupPool] = await Promise.all([
-    fetchAllNews(),
-    fetchDedupPool(),
-  ]);
+  // Fetch DISPLAY items only (3 jam max — strict)
+  let news = await fetchAllNews();
+  news = attachViralScores(news);
 
-  let news = attachViralScores(displayItems);
-
-  // Dedup tanpa Google search default (terlalu berat untuk realtime)
-  // Bisa diaktifkan via ?deepSearch=true
-  const deepSearch = searchParams.get("deepSearch") === "true";
-  news = await detectDuplicates(news, dedupPool, deepSearch);
-
+  // Filter sebelum origin search supaya gak buang waktu cari original
+  // untuk berita yang akan di-filter out
   if (province) {
     news = news.filter((item) =>
       item.provinces.some((p) => p.toLowerCase() === province.toLowerCase())
@@ -35,6 +30,7 @@ export async function GET(request) {
     );
   }
 
+  // Sort dulu, baru limit, baru cari origin (biar gak sia-sia)
   if (sort === "viral") {
     news.sort((a, b) => (b.viral?.viralScore || 0) - (a.viral?.viralScore || 0));
   } else {
@@ -42,6 +38,16 @@ export async function GET(request) {
   }
 
   news = news.slice(0, limit);
+
+  // Cari ORIGINAL untuk tiap berita (terpisah, tidak terikat 3 jam)
+  if (!skipOrigin && news.length > 0) {
+    const originals = await findOriginalsForItems(news, 6);
+    news = news.map((item, idx) => ({
+      ...item,
+      originalSource: originals[idx],
+      isOriginal: !originals[idx],
+    }));
+  }
 
   return Response.json({
     count: news.length,
