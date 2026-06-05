@@ -127,16 +127,100 @@ export const MEDIA_SOURCES = [
   { name: "BentengSumbar.com", rss: "https://bentengsumbar.com/feed", website: "https://bentengsumbar.com", province: "Sumatera Barat" },
   { name: "TopSatu.com", rss: "https://topsatu.com/feed", website: "https://topsatu.com", province: "Sumatera Barat" },
 
-  // === RIAU (4 portal) ===
+  // === RIAU (23 portal) ===
+  { name: "RiauMandiri.co", rss: "https://riaumandiri.co/feed", website: "https://riaumandiri.co", province: "Riau" },
+  { name: "Riau1.com", rss: "https://riau1.com/feed", website: "https://riau1.com", province: "Riau" },
+  { name: "RiauBISA.com", rss: "https://riaubisa.com/feed", website: "https://riaubisa.com", province: "Riau" },
+  { name: "BeritaRiau.com", rss: "https://beritariau.com/feed", website: "https://beritariau.com", province: "Riau" },
+  { name: "BerkabarNews.com", rss: "https://berkabarnews.com/feed", website: "https://berkabarnews.com", province: "Riau" },
+  { name: "LiputanOke.com", rss: "https://liputanoke.com/feed", website: "https://liputanoke.com", province: "Riau" },
+  { name: "DumaiPosNews.com", rss: "https://dumaiposnews.com/feed", website: "https://dumaiposnews.com", province: "Riau" },
+  { name: "SegmenNews.com", rss: "https://segmennews.com/feed", website: "https://segmennews.com", province: "Riau" },
+  { name: "MonitorRiau.com", rss: "https://monitorriau.com/feed", website: "https://monitorriau.com", province: "Riau" },
+  { name: "CeriaTV.co.id", rss: "https://ceriatv.co.id/feed", website: "https://ceriatv.co.id", province: "Riau" },
+  { name: "IndragiriOne.com", rss: "https://indragirione.com/feed", website: "https://indragirione.com", province: "Riau" },
+  { name: "RiauPos.co", rss: "https://riaupos.co/feed", website: "https://riaupos.co", province: "Riau" },
+  { name: "RiauAktual.com", rss: "https://riauaktual.com/feed", website: "https://riauaktual.com", province: "Riau" },
+  { name: "NadaRiau.com", rss: "https://nadariau.com/feed", website: "https://nadariau.com", province: "Riau" },
+  { name: "RiauIn.com", rss: "https://riauin.com/feed", website: "https://riauin.com", province: "Riau" },
+  { name: "Cakaplah.com", rss: "https://cakaplah.com/feed", website: "https://cakaplah.com", province: "Riau" },
+  { name: "Riau24.com", rss: "https://riau24.com/feed", website: "https://riau24.com", province: "Riau" },
+  { name: "GoRiau.com", rss: "https://goriau.com/feed", website: "https://goriau.com", province: "Riau" },
+  { name: "HalloRiau.com", rss: "https://halloriau.com/feed", website: "https://halloriau.com", province: "Riau" },
+  { name: "SiagaOnline.com", rss: "https://siagaonline.com/feed", website: "https://siagaonline.com", province: "Riau" },
+  { name: "RiauOnline.co.id", rss: "https://riauonline.co.id/feed", website: "https://riauonline.co.id", province: "Riau" },
+  { name: "IniRiau.com", rss: "https://iniriau.com/feed", website: "https://iniriau.com", province: "Riau" },
   { name: "Tribun Pekanbaru", rss: "https://pekanbaru.tribunnews.com/rss", website: "https://pekanbaru.tribunnews.com", province: "Riau" },
-  { name: "GoRiau", rss: "https://goriau.com/feed", website: "https://goriau.com", province: "Riau" },
-  { name: "Riaupos", rss: "https://riaupos.jawapos.com/feed", website: "https://riaupos.jawapos.com", province: "Riau" },
-  { name: "Cakaplah", rss: "https://www.cakaplah.com/feed", website: "https://www.cakaplah.com", province: "Riau" },
 
-  // === KEPULAUAN RIAU (3 portal) ===
+  // === KEPULAUAN RIAU (70 portal) ===
+  { name: "BatamNow.com", rss: "https://batamnow.com/feed", website: "https://batamnow.com", province: "Kepulauan Riau" },
+  { name: "SuaraSiber.com", rss: "https://suarasiber.com/feed", website: "https://suarasiber.com", province: "Kepulauan Riau" },
+  { name: "SuaraBatam.com", rss: "https://suarabatam.com/feed", website: "https://suarabatam.com", province: "Kepulauan Riau" },
+  { name: "KoranPerbatasan.com", rss: "https://koranperbatasan.com/feed", website: "https://koranperbatasan.com", province: "Kepulauan Riau" },
+  { name: "AriraNews.com", rss: "https://ariranews.com/feed", website: "https://ariranews.com", province: "Kepulauan Riau" },
+  { name: "BursaKota.co.id", rss: "https://bursakota.co.id/feed", website: "https://bursakota.co.id", province: "Kepulauan Riau" },
+  { name: "KepriGlobal.com", rss: "https://kepriglobal.com/feed", website: "https://kepriglobal.com", province: "Kepulauan Riau" },
+  { name: "AciKepri.com", rss: "https://acikepri.com/feed", website: "https://acikepri.com", province: "Kepulauan Riau" },
+  { name: "AlurNews.com", rss: "https://alurnews.com/feed", website: "https://alurnews.com", province: "Kepulauan Riau" },
+  { name: "IndependenNews.com", rss: "https://independennews.com/feed", website: "https://independennews.com", province: "Kepulauan Riau" },
+  { name: "OwnTalk.co.id", rss: "https://owntalk.co.id/feed", website: "https://owntalk.co.id", province: "Kepulauan Riau" },
+  { name: "WahanaIndoNews.com", rss: "https://wahanaindonews.com/feed", website: "https://wahanaindonews.com", province: "Kepulauan Riau" },
+  { name: "DetikGlobalNews.com", rss: "https://detikglobalnews.com/feed", website: "https://detikglobalnews.com", province: "Kepulauan Riau" },
+  { name: "BeritaBatam.com", rss: "https://beritabatam.com/feed", website: "https://beritabatam.com", province: "Kepulauan Riau" },
+  { name: "HarianMetropolitan.co.id", rss: "https://harianmetropolitan.co.id/feed", website: "https://harianmetropolitan.co.id", province: "Kepulauan Riau" },
+  { name: "NatindoNews.com", rss: "https://natindonews.com/feed", website: "https://natindonews.com", province: "Kepulauan Riau" },
+  { name: "GoKepri.com", rss: "https://gokepri.com/feed", website: "https://gokepri.com", province: "Kepulauan Riau" },
+  { name: "MetroIndonesia.co.id", rss: "https://metroindonesia.co.id/feed", website: "https://metroindonesia.co.id", province: "Kepulauan Riau" },
+  { name: "RanaiPos.com", rss: "https://ranaipos.com/feed", website: "https://ranaipos.com", province: "Kepulauan Riau" },
+  { name: "Terdepan.co.id", rss: "https://terdepan.co.id/feed", website: "https://terdepan.co.id", province: "Kepulauan Riau" },
+  { name: "HarianKepri.com", rss: "https://hariankepri.com/feed", website: "https://hariankepri.com", province: "Kepulauan Riau" },
+  { name: "SuaraSerumpun.com", rss: "https://suaraserumpun.com/feed", website: "https://suaraserumpun.com", province: "Kepulauan Riau" },
+  { name: "KepriPos.id", rss: "https://kepripos.id/feed", website: "https://kepripos.id", province: "Kepulauan Riau" },
+  { name: "KepriBetter.com", rss: "https://kepribetter.com/feed", website: "https://kepribetter.com", province: "Kepulauan Riau" },
+  { name: "JalurNews.com", rss: "https://jalurnews.com/feed", website: "https://jalurnews.com", province: "Kepulauan Riau" },
+  { name: "InfoKepri.com", rss: "https://infokepri.com/feed", website: "https://infokepri.com", province: "Kepulauan Riau" },
+  { name: "BatamInfo.co.id", rss: "https://bataminfo.co.id/feed", website: "https://bataminfo.co.id", province: "Kepulauan Riau" },
+  { name: "MimbarPublik.com", rss: "https://mimbarpublik.com/feed", website: "https://mimbarpublik.com", province: "Kepulauan Riau" },
+  { name: "MediaTrias.com", rss: "https://mediatrias.com/feed", website: "https://mediatrias.com", province: "Kepulauan Riau" },
+  { name: "MetroBatam.com", rss: "https://metrobatam.com/feed", website: "https://metrobatam.com", province: "Kepulauan Riau" },
+  { name: "HarianHaluanKepri.com", rss: "https://harianhaluankepri.com/feed", website: "https://harianhaluankepri.com", province: "Kepulauan Riau" },
+  { name: "GoTVNews.co.id", rss: "https://gotvnews.co.id/feed", website: "https://gotvnews.co.id", province: "Kepulauan Riau" },
+  { name: "Kutipan.co", rss: "https://kutipan.co/feed", website: "https://kutipan.co", province: "Kepulauan Riau" },
+  { name: "TransKepri.com", rss: "https://transkepri.com/feed", website: "https://transkepri.com", province: "Kepulauan Riau" },
+  { name: "J5Newsroom.com", rss: "https://j5newsroom.com/feed", website: "https://j5newsroom.com", province: "Kepulauan Riau" },
+  { name: "SinarPerbatasan.com", rss: "https://sinarperbatasan.com/feed", website: "https://sinarperbatasan.com", province: "Kepulauan Riau" },
+  { name: "Ulasan.co", rss: "https://ulasan.co/feed", website: "https://ulasan.co", province: "Kepulauan Riau" },
+  { name: "AlreinaMedia.com", rss: "https://alreinamedia.com/feed", website: "https://alreinamedia.com", province: "Kepulauan Riau" },
+  { name: "LintasKepri.com", rss: "https://lintaskepri.com/feed", website: "https://lintaskepri.com", province: "Kepulauan Riau" },
+  { name: "JurnalTerkini.id", rss: "https://jurnalterkini.id/feed", website: "https://jurnalterkini.id", province: "Kepulauan Riau" },
+  { name: "MediaNesia.id", rss: "https://medianesia.id/feed", website: "https://medianesia.id", province: "Kepulauan Riau" },
+  { name: "HarianMemoKepri.com", rss: "https://harianmemokepri.com/feed", website: "https://harianmemokepri.com", province: "Kepulauan Riau" },
+  { name: "Kepri.co.id", rss: "https://kepri.co.id/feed", website: "https://kepri.co.id", province: "Kepulauan Riau" },
+  { name: "KepriNews.co", rss: "https://keprinews.co/feed", website: "https://keprinews.co", province: "Kepulauan Riau" },
+  { name: "RadarSatu.com", rss: "https://radarsatu.com/feed", website: "https://radarsatu.com", province: "Kepulauan Riau" },
+  { name: "DataKepri.com", rss: "https://datakepri.com/feed", website: "https://datakepri.com", province: "Kepulauan Riau" },
+  { name: "VNews.click", rss: "https://vnews.click/feed", website: "https://vnews.click", province: "Kepulauan Riau" },
+  { name: "Batampos.co.id", rss: "https://batampos.co.id/feed", website: "https://batampos.co.id", province: "Kepulauan Riau" },
+  { name: "KepriPedia.com", rss: "https://kepripedia.com/feed", website: "https://kepripedia.com", province: "Kepulauan Riau" },
+  { name: "TerkiniNews.com", rss: "https://terkininews.com/feed", website: "https://terkininews.com", province: "Kepulauan Riau" },
+  { name: "GebrakNews.co.id", rss: "https://gebraknews.co.id/feed", website: "https://gebraknews.co.id", province: "Kepulauan Riau" },
+  { name: "BatamClick.com", rss: "https://batamclick.com/feed", website: "https://batamclick.com", province: "Kepulauan Riau" },
+  { name: "ProBatam.co", rss: "https://probatam.co/feed", website: "https://probatam.co", province: "Kepulauan Riau" },
+  { name: "KabarTerkini.co.id", rss: "https://kabarterkini.co.id/feed", website: "https://kabarterkini.co.id", province: "Kepulauan Riau" },
+  { name: "Durasi.co.id", rss: "https://durasi.co.id/feed", website: "https://durasi.co.id", province: "Kepulauan Riau" },
+  { name: "Rasio.co", rss: "https://rasio.co/feed", website: "https://rasio.co", province: "Kepulauan Riau" },
+  { name: "BatamNews.co.id", rss: "https://batamnews.co.id/feed", website: "https://batamnews.co.id", province: "Kepulauan Riau" },
+  { name: "DeltaKepri.co.id", rss: "https://deltakepri.co.id/feed", website: "https://deltakepri.co.id", province: "Kepulauan Riau" },
+  { name: "CentralNews.id", rss: "https://centralnews.id/feed", website: "https://centralnews.id", province: "Kepulauan Riau" },
+  { name: "MandalaPos.co.id", rss: "https://mandalapos.co.id/feed", website: "https://mandalapos.co.id", province: "Kepulauan Riau" },
+  { name: "PosMetro.co", rss: "https://posmetro.co/feed", website: "https://posmetro.co", province: "Kepulauan Riau" },
+  { name: "IGNNews.id", rss: "https://ignnews.id/feed", website: "https://ignnews.id", province: "Kepulauan Riau" },
+  { name: "MarwahKepri.com", rss: "https://marwahkepri.com/feed", website: "https://marwahkepri.com", province: "Kepulauan Riau" },
+  { name: "KepriDays.co.id", rss: "https://kepridays.co.id/feed", website: "https://kepridays.co.id", province: "Kepulauan Riau" },
+  { name: "HMSTimes.com", rss: "https://hmstimes.com/feed", website: "https://hmstimes.com", province: "Kepulauan Riau" },
   { name: "Tribun Batam", rss: "https://batam.tribunnews.com/rss", website: "https://batam.tribunnews.com", province: "Kepulauan Riau" },
-  { name: "Batampos", rss: "https://batampos.co.id/feed", website: "https://batampos.co.id", province: "Kepulauan Riau" },
-  { name: "Sijoritoday", rss: "https://sijoritoday.com/feed", website: "https://sijoritoday.com", province: "Kepulauan Riau" },
+  { name: "PojokBatam.id", rss: "https://pojokbatam.id/feed", website: "https://pojokbatam.id", province: "Kepulauan Riau" },
+  { name: "SilabusKepri.co.id", rss: "https://silabuskepri.co.id/feed", website: "https://silabuskepri.co.id", province: "Kepulauan Riau" },
 ];
 
 // Google Trends RSS (Indonesia)
@@ -149,6 +233,8 @@ export const GOOGLE_NEWS_FEEDS = [
   { label: "Medan", rss: "https://news.google.com/rss/search?q=Medan+Sumatera+Utara&hl=id&gl=ID&ceid=ID:id" },
   { label: "Aceh", rss: "https://news.google.com/rss/search?q=Aceh&hl=id&gl=ID&ceid=ID:id" },
   { label: "Sumatera Barat", rss: "https://news.google.com/rss/search?q=Sumatera+Barat&hl=id&gl=ID&ceid=ID:id" },
+  { label: "Riau", rss: "https://news.google.com/rss/search?q=Riau&hl=id&gl=ID&ceid=ID:id" },
+  { label: "Kepulauan Riau", rss: "https://news.google.com/rss/search?q=Kepulauan+Riau+Batam&hl=id&gl=ID&ceid=ID:id" },
 ];
 
 /**
@@ -212,6 +298,34 @@ export const SUMBAR_EXTRA_KEYWORDS = [
   "Simpang Empat", "Arosuka",
 ];
 
+// --- RIAU ---
+export const RIAU_KOTA = [
+  "Pekanbaru", "Dumai",
+];
+export const RIAU_KABUPATEN = [
+  "Bengkalis", "Indragiri Hilir", "Indragiri Hulu", "Kampar",
+  "Kepulauan Meranti", "Kuantan Singingi", "Pelalawan",
+  "Rokan Hilir", "Rokan Hulu", "Siak",
+];
+export const RIAU_EXTRA_KEYWORDS = [
+  "Riau", "Provinsi Riau", "Tembilahan", "Rengat", "Bangkinang",
+  "Selat Panjang", "Bagan Siapi-api", "Pasir Pangaraian",
+  "Pangkalan Kerinci", "Siak Sri Indrapura", "Teluk Kuantan",
+];
+
+// --- KEPULAUAN RIAU ---
+export const KEPRI_KOTA = [
+  "Tanjungpinang", "Batam",
+];
+export const KEPRI_KABUPATEN = [
+  "Bintan", "Karimun", "Kepulauan Anambas", "Lingga", "Natuna",
+];
+export const KEPRI_EXTRA_KEYWORDS = [
+  "Kepulauan Riau", "Kepri", "Batam", "Tanjung Pinang",
+  "Ranai", "Daik", "Tarempa", "Tanjung Balai Karimun",
+  "Dabo Singkep", "Kijang",
+];
+
 /**
  * Gabungan keyword per provinsi
  * Digunakan di region-filter.js
@@ -220,6 +334,8 @@ export const PROVINCE_REGIONS = {
   "Sumatera Utara": [...SUMUT_KOTA, ...SUMUT_KABUPATEN, ...SUMUT_EXTRA_KEYWORDS],
   "Aceh": [...ACEH_KOTA, ...ACEH_KABUPATEN, ...ACEH_EXTRA_KEYWORDS],
   "Sumatera Barat": [...SUMBAR_KOTA, ...SUMBAR_KABUPATEN, ...SUMBAR_EXTRA_KEYWORDS],
+  "Riau": [...RIAU_KOTA, ...RIAU_KABUPATEN, ...RIAU_EXTRA_KEYWORDS],
+  "Kepulauan Riau": [...KEPRI_KOTA, ...KEPRI_KABUPATEN, ...KEPRI_EXTRA_KEYWORDS],
 };
 
 // ALL_REGIONS: semua kota/kabupaten dari semua provinsi yang sudah dipetakan
@@ -227,6 +343,8 @@ export const ALL_REGIONS = [
   ...SUMUT_KOTA, ...SUMUT_KABUPATEN,
   ...ACEH_KOTA, ...ACEH_KABUPATEN,
   ...SUMBAR_KOTA, ...SUMBAR_KABUPATEN,
+  ...RIAU_KOTA, ...RIAU_KABUPATEN,
+  ...KEPRI_KOTA, ...KEPRI_KABUPATEN,
 ];
 
 // Semua keyword valid (berita harus menyebut salah satu dari ini)
@@ -234,4 +352,6 @@ export const ALL_VALID_KEYWORDS = [
   ...PROVINCE_REGIONS["Sumatera Utara"],
   ...PROVINCE_REGIONS["Aceh"],
   ...PROVINCE_REGIONS["Sumatera Barat"],
+  ...PROVINCE_REGIONS["Riau"],
+  ...PROVINCE_REGIONS["Kepulauan Riau"],
 ];

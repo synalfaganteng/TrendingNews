@@ -7,6 +7,8 @@ const PROVINCES = [
   { value: "Sumatera Utara", label: "Sumatera Utara" },
   { value: "Aceh", label: "Aceh" },
   { value: "Sumatera Barat", label: "Sumatera Barat" },
+  { value: "Riau", label: "Riau" },
+  { value: "Kepulauan Riau", label: "Kepulauan Riau" },
 ];
 
 const SORT_OPTIONS = [

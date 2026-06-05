@@ -13,7 +13,7 @@ export default function Header() {
               Trending News
             </h1>
             <p className="text-xs text-gray-400">
-              Berita real-time • 114 portal terverifikasi Dewan Pers • Sumut, Aceh, Sumbar
+              Berita real-time • 200+ portal terverifikasi Dewan Pers • 5 Provinsi
             </p>
           </div>
         </div>
