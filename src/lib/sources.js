@@ -122,6 +122,10 @@ export const MEDIA_SOURCES = [
   { name: "KupasOnline.com", rss: "https://kupasonline.com/feed", website: "https://kupasonline.com", province: "Sumatera Barat" },
   { name: "SemangatNews.com", rss: "https://semangatnews.com/feed", website: "https://semangatnews.com", province: "Sumatera Barat" },
   { name: "RakyatTerkini.com", rss: "https://rakyatterkini.com/feed", website: "https://rakyatterkini.com", province: "Sumatera Barat" },
+  { name: "FajarSumbar.com", rss: "https://fajarsumbar.com/feed", website: "https://fajarsumbar.com", province: "Sumatera Barat" },
+  { name: "KlikPositif.com", rss: "https://klikpositif.com/feed", website: "https://klikpositif.com", province: "Sumatera Barat" },
+  { name: "BentengSumbar.com", rss: "https://bentengsumbar.com/feed", website: "https://bentengsumbar.com", province: "Sumatera Barat" },
+  { name: "TopSatu.com", rss: "https://topsatu.com/feed", website: "https://topsatu.com", province: "Sumatera Barat" },
 
   // === RIAU (4 portal) ===
   { name: "Tribun Pekanbaru", rss: "https://pekanbaru.tribunnews.com/rss", website: "https://pekanbaru.tribunnews.com", province: "Riau" },
