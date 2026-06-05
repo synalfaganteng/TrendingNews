@@ -215,6 +215,11 @@ export default function NewsFeed() {
                         {item.viral.viralLevel}
                       </span>
                     )}
+                    {item.isOriginal && (
+                      <span className="px-1.5 py-0.5 text-xs rounded bg-green-900/50 text-green-400 border border-green-800">
+                        ⚡ Pertama
+                      </span>
+                    )}
                   </div>
                   <a
                     href={item.link}
@@ -251,6 +256,23 @@ export default function NewsFeed() {
                       </>
                     )}
                   </div>
+                  {/* Original Source indicator */}
+                  {item.originalSource && (
+                    <div className="mt-2 p-2 rounded-lg bg-amber-950/30 border border-amber-900/50">
+                      <p className="text-xs text-amber-400">
+                        ⏪ Pertama ditulis oleh{" "}
+                        <a
+                          href={item.originalSource.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold underline hover:text-amber-300"
+                        >
+                          {item.originalSource.source}
+                        </a>
+                        {" "}({item.originalSource.timeDiff})
+                      </p>
+                    </div>
+                  )}
                   {item.viral &&
                     item.viral.platforms &&
                     item.viral.platforms.length > 0 && (

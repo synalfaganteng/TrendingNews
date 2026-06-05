@@ -1,18 +1,22 @@
 import { fetchAllNews } from "@/src/lib/fetcher";
 import { rankByViralPotential } from "@/src/lib/viral-scorer";
+import { detectDuplicates } from "@/src/lib/dedup";
 
 // Revalidate every 30 seconds (ISR)
 export const revalidate = 30;
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type"); // filter: media, google-news, trending
-  const province = searchParams.get("province"); // filter: Sumatera Utara, Aceh, Sumatera Barat
-  const region = searchParams.get("region"); // filter: kota/kabupaten specific
-  const sort = searchParams.get("sort") || "viral"; // "viral" or "time"
+  const type = searchParams.get("type");
+  const province = searchParams.get("province");
+  const region = searchParams.get("region");
+  const sort = searchParams.get("sort") || "viral";
   const limit = parseInt(searchParams.get("limit") || "100", 10);
 
   let news = await fetchAllNews();
+
+  // Detect duplicates BEFORE filtering (needs full dataset for comparison)
+  news = detectDuplicates(news);
 
   // Apply filters
   if (type) {
