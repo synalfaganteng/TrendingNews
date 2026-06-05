@@ -1,0 +1,22 @@
+{
+  "name": "trending-sumatera",
+  "version": "1.0.0",
+  "description": "Real-time news aggregator from verified Indonesian media sources",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.3.0",
+    "next": "^16.2.7",
+    "postcss": "^8.5.15",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "rss-parser": "^3.13.0",
+    "tailwindcss": "^4.3.0"
+  }
+}
