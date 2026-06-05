@@ -160,11 +160,11 @@ export default function TrendingSidebar() {
 
         <div className="mt-3 pt-3 border-t border-gray-800">
           <p className="text-xs text-gray-500">
-            <strong className="text-gray-400">56 portal</strong> media siber
-            terverifikasi Dewan Pers • Sumatera Utara
+            <strong className="text-gray-400">99 portal</strong> media siber
+            terverifikasi Dewan Pers (5 provinsi)
           </p>
           <p className="text-xs text-gray-600 mt-1">
-            8 Kota • 25 Kabupaten
+            Filter: hanya berita relevan Sumut (8 Kota • 25 Kabupaten)
           </p>
         </div>
       </div>

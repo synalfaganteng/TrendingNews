@@ -13,7 +13,7 @@ export default function Header() {
               Trending Sumut
             </h1>
             <p className="text-xs text-gray-400">
-              Berita real-time Sumatera Utara • 56 portal terverifikasi Dewan Pers
+              Berita real-time Sumatera Utara • 99 portal terverifikasi Dewan Pers (5 provinsi)
             </p>
           </div>
         </div>
