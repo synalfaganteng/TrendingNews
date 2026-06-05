@@ -1,14 +1,14 @@
 "use client";
 
-function Bar({ label, value, max, color }) {
+function MiniBar({ label, value, max, color = "bg-rose-500" }) {
   const pct = max > 0 ? (value / max) * 100 : 0;
   return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs">
+    <div className="space-y-0.5">
+      <div className="flex items-center justify-between text-[11px]">
         <span className="text-gray-300 truncate">{label}</span>
         <span className="text-gray-500 tabular-nums shrink-0 ml-2">{value}</span>
       </div>
-      <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+      <div className="h-1 rounded-full bg-white/5 overflow-hidden">
         <div
           className={`h-full ${color} rounded-full transition-all duration-500`}
           style={{ width: `${pct}%` }}
@@ -18,11 +18,10 @@ function Bar({ label, value, max, color }) {
   );
 }
 
-function Section({ title, icon, children }) {
+function Section({ title, children }) {
   return (
-    <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-4">
-      <h3 className="flex items-center gap-2 text-sm font-bold text-white mb-3">
-        <span>{icon}</span>
+    <div className="rounded-xl bg-white/[0.02] border border-white/10 p-3">
+      <h3 className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-2">
         {title}
       </h3>
       {children}
@@ -30,156 +29,100 @@ function Section({ title, icon, children }) {
   );
 }
 
-export default function InsightsSidebar({ analytics, trending }) {
+export default function InsightsSidebar({ analytics }) {
   if (!analytics) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="animate-pulse h-40 rounded-2xl bg-white/5 border border-white/10"
-          />
+          <div key={i} className="h-32 rounded-xl bg-white/5 animate-pulse" />
         ))}
       </div>
     );
   }
 
-  const { byProvince, byType, byPlatform, hotRegions, viralDist } = analytics;
-  const maxProvince = Math.max(1, ...byProvince.map((p) => p.count));
+  const { byProvince, byType, hotRegions, trendingKeywords } = analytics;
+  const maxProv = Math.max(1, ...byProvince.map((p) => p.count));
   const maxType = Math.max(1, ...byType.map((t) => t.count));
-  const maxPlatform = Math.max(1, ...byPlatform.map((p) => p.count));
   const maxRegion = Math.max(1, ...hotRegions.map((r) => r.count));
 
   return (
-    <div className="space-y-3">
-      {/* Viral distribution donut-like */}
-      <Section title="Distribusi Viral" icon="🎯">
-        <div className="space-y-2">
-          <Bar
-            label="🔥 Sangat Viral (≥75)"
-            value={viralDist.sangat}
-            max={Math.max(1, viralDist.sangat + viralDist.potensi + viralDist.cukup + viralDist.normal)}
-            color="bg-gradient-to-r from-red-500 to-pink-500"
-          />
-          <Bar
-            label="🟠 Berpotensi (≥55)"
-            value={viralDist.potensi}
-            max={Math.max(1, viralDist.sangat + viralDist.potensi + viralDist.cukup + viralDist.normal)}
-            color="bg-gradient-to-r from-orange-500 to-yellow-500"
-          />
-          <Bar
-            label="🟡 Cukup (≥35)"
-            value={viralDist.cukup}
-            max={Math.max(1, viralDist.sangat + viralDist.potensi + viralDist.cukup + viralDist.normal)}
-            color="bg-gradient-to-r from-yellow-500 to-amber-500"
-          />
-          <Bar
-            label="⚪ Normal"
-            value={viralDist.normal}
-            max={Math.max(1, viralDist.sangat + viralDist.potensi + viralDist.cukup + viralDist.normal)}
-            color="bg-gradient-to-r from-gray-600 to-gray-500"
-          />
-        </div>
-      </Section>
+    <div className="space-y-2">
+      {/* Trending keywords — wordcloud-ish */}
+      {trendingKeywords && trendingKeywords.length > 0 && (
+        <Section title="Keyword Lagi Naik">
+          <div className="flex flex-wrap gap-1">
+            {trendingKeywords.map((k) => {
+              const size =
+                k.count >= 5 ? "text-base font-black" :
+                k.count >= 3 ? "text-sm font-bold" :
+                "text-xs font-medium";
+              return (
+                <span
+                  key={k.keyword}
+                  className={`${size} text-pink-300 px-1.5 py-0.5 rounded bg-pink-500/10 border border-pink-500/20`}
+                >
+                  #{k.keyword}
+                  <span className="text-[10px] text-gray-500 ml-1">×{k.count}</span>
+                </span>
+              );
+            })}
+          </div>
+        </Section>
+      )}
 
-      {/* Hot Regions */}
+      {/* Hot regions */}
       {hotRegions.length > 0 && (
-        <Section title="Wilayah Paling Panas" icon="📍">
-          <div className="space-y-2">
-            {hotRegions.slice(0, 8).map((r, idx) => (
-              <Bar
+        <Section title="Wilayah Panas">
+          <div className="space-y-1.5">
+            {hotRegions.slice(0, 8).map((r) => (
+              <MiniBar
                 key={r.key}
-                label={`${idx + 1}. ${r.key}`}
+                label={r.key}
                 value={r.count}
                 max={maxRegion}
-                color="bg-gradient-to-r from-emerald-500 to-cyan-500"
+                color="bg-emerald-500"
               />
             ))}
           </div>
         </Section>
       )}
 
-      {/* Per Provinsi */}
-      <Section title="Per Provinsi" icon="🗺️">
-        <div className="space-y-2">
+      {/* Per provinsi */}
+      <Section title="Per Provinsi">
+        <div className="space-y-1.5">
           {byProvince.map((p) => (
-            <Bar
+            <MiniBar
               key={p.key}
               label={p.key}
               value={p.count}
-              max={maxProvince}
-              color="bg-gradient-to-r from-cyan-500 to-blue-500"
+              max={maxProv}
+              color="bg-cyan-500"
             />
           ))}
         </div>
       </Section>
 
-      {/* Per Content Type */}
+      {/* Per type */}
       {byType.length > 0 && (
-        <Section title="Kategori Konten" icon="📂">
-          <div className="space-y-2">
+        <Section title="Kategori">
+          <div className="space-y-1.5">
             {byType.map((t) => (
-              <Bar
+              <MiniBar
                 key={t.key}
                 label={t.key}
                 value={t.count}
                 max={maxType}
-                color="bg-gradient-to-r from-purple-500 to-fuchsia-500"
+                color="bg-purple-500"
               />
             ))}
           </div>
         </Section>
       )}
 
-      {/* Best Platform Match */}
-      {byPlatform.length > 0 && (
-        <Section title="Cocok di Platform" icon="📱">
-          <div className="space-y-2">
-            {byPlatform.map((p) => (
-              <Bar
-                key={p.key}
-                label={p.key}
-                value={p.count}
-                max={maxPlatform}
-                color="bg-gradient-to-r from-pink-500 to-rose-500"
-              />
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {/* Google Trends */}
-      {trending && trending.length > 0 && (
-        <Section title="Google Trends ID" icon="🔥">
-          <ul className="space-y-1.5">
-            {trending.slice(0, 12).map((item, idx) => (
-              <li key={idx}>
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-start gap-2 group"
-                >
-                  <span className="text-[10px] font-mono text-gray-600 mt-0.5 shrink-0 w-5">
-                    {String(idx + 1).padStart(2, "0")}
-                  </span>
-                  <span className="text-xs text-gray-300 group-hover:text-pink-300 line-clamp-2 transition-colors">
-                    {item.title}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      {/* Footer info */}
-      <div className="rounded-2xl bg-gradient-to-br from-white/[0.02] to-transparent border border-white/5 p-4 text-[10px] text-gray-500 space-y-1">
-        <p className="text-gray-400 font-bold">Cakupan Data</p>
-        <p>📰 200+ portal terverifikasi Dewan Pers</p>
-        <p>🗺️ 24 Kota · 70 Kabupaten</p>
-        <p>⏱️ Pool dedup: 7 hari ke belakang</p>
-        <p>🤖 Auto-detect spike + scoring AI</p>
+      <div className="rounded-xl bg-white/[0.02] border border-white/10 p-3 text-[10px] text-gray-500">
+        <p>📰 200+ portal · Dewan Pers</p>
+        <p>🗺️ 24 Kota · 70 Kab. di 5 Provinsi</p>
+        <p>⏱️ Pool dedup: 7 hari</p>
       </div>
     </div>
   );
