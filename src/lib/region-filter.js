@@ -1,157 +1,52 @@
 /**
- * Region Filter — memastikan berita yang ditampilkan HANYA yang
- * kejadiannya di Sumatera Utara.
+ * Region Filter — Multi-Provinsi
  *
- * Logika:
- * 1. Cek apakah berita menyebut wilayah Sumut (kota/kab/keyword)
- * 2. Cek apakah berita menyebut lokasi LUAR Sumut
- * 3. Keputusan:
- *    - Menyebut Sumut DAN TIDAK menyebut luar → LOLOS ✅
- *    - Menyebut Sumut DAN menyebut luar → LOLOS ✅ (mungkin berita perbandingan)
- *    - TIDAK menyebut Sumut DAN menyebut luar → BUANG ❌
- *    - TIDAK menyebut keduanya → BUANG ❌ (tidak bisa dipastikan lokasi)
+ * Berita HANYA ditampilkan jika menyebut wilayah yang sudah dipetakan
+ * (Sumatera Utara, Aceh, Sumatera Barat).
+ *
+ * Berita tentang Jakarta, Lombok, internasional, dll → BUANG.
+ * Bahkan jika dari portal Sumut/Aceh/Sumbar — tetap dicek kontennya.
  */
 
-import { SUMUT_KEYWORDS } from "./sources";
-
-// Lokasi di luar Sumatera Utara yang sering muncul di berita
-// Jika berita menyebut ini TANPA menyebut Sumut → buang
-const NON_SUMUT_LOCATIONS = [
-  // Pulau Jawa
-  "Jakarta",
-  "Bogor",
-  "Depok",
-  "Tangerang",
-  "Bekasi",
-  "Bandung",
-  "Semarang",
-  "Surabaya",
-  "Yogyakarta",
-  "Jogja",
-  "Solo",
-  "Malang",
-  "Cirebon",
-  "Surakarta",
-  "Serang",
-  "Banten",
-
-  // Luar Jawa
-  "Makassar",
-  "Manado",
-  "Denpasar",
-  "Bali",
-  "Lombok",
-  "Mataram",
-  "Balikpapan",
-  "Samarinda",
-  "Pontianak",
-  "Banjarmasin",
-  "Palembang",
-  "Lampung",
-  "Bengkulu",
-  "Jambi",
-  "Jayapura",
-  "Papua",
-  "Ambon",
-  "Maluku",
-  "Kendari",
-  "Palu",
-  "Gorontalo",
-  "Kupang",
-  "NTT",
-  "NTB",
-  "Sulawesi",
-  "Kalimantan",
-
-  // Aceh (nanti bisa dipindah kalau Aceh sudah dipetakan)
-  "Banda Aceh",
-  "Lhokseumawe",
-  "Langsa",
-  "Sabang",
-  "Aceh Besar",
-  "Pidie",
-  "Bireuen",
-  "Aceh Utara",
-  "Aceh Timur",
-  "Aceh Selatan",
-  "Aceh Barat",
-  "Aceh Tengah",
-  "Gayo Lues",
-  "Nagan Raya",
-  "Aceh Singkil",
-  "Simeulue",
-  "Bener Meriah",
-  "Aceh Tamiang",
-
-  // Sumatera Barat
-  "Padang",
-  "Bukittinggi",
-  "Payakumbuh",
-  "Solok",
-  "Sawahlunto",
-  "Pariaman",
-
-  // Riau & Kepri
-  "Pekanbaru",
-  "Dumai",
-  "Batam",
-  "Tanjung Pinang",
-  "Bintan",
-  "Karimun",
-
-  // Internasional
-  "Malaysia",
-  "Singapura",
-  "Singapore",
-  "Thailand",
-  "Amerika",
-  "China",
-  "Jepang",
-  "Korea",
-  "Eropa",
-  "Australia",
-  "Palestina",
-  "Israel",
-  "Gaza",
-  "Ukraina",
-  "Rusia",
-];
+import { ALL_VALID_KEYWORDS, ALL_REGIONS, PROVINCE_REGIONS } from "./sources";
 
 /**
- * Check if text mentions any Sumut region/keyword
+ * Check if text mentions any valid region from our mapped provinces
+ * @returns {boolean}
  */
-function mentionsSumut(text) {
+export function isRelevantToMappedRegions(text) {
+  if (!text) return false;
   const lower = text.toLowerCase();
-  return SUMUT_KEYWORDS.some((keyword) =>
+  return ALL_VALID_KEYWORDS.some((keyword) =>
     lower.includes(keyword.toLowerCase())
   );
 }
 
 /**
- * Check if text mentions a non-Sumut location
+ * Detect which province(s) a news item belongs to based on content
+ * @returns {string[]} array of province names
  */
-function mentionsNonSumut(text) {
+export function detectProvinces(text) {
+  if (!text) return [];
   const lower = text.toLowerCase();
-  return NON_SUMUT_LOCATIONS.some((loc) =>
-    lower.includes(loc.toLowerCase())
-  );
+  const provinces = [];
+
+  for (const [province, keywords] of Object.entries(PROVINCE_REGIONS)) {
+    const matches = keywords.some((kw) => lower.includes(kw.toLowerCase()));
+    if (matches) provinces.push(province);
+  }
+
+  return provinces;
 }
 
 /**
- * Determine if a news item should be displayed
- * @param {string} text - full text (title + snippet)
- * @returns {boolean} true if the news is relevant to Sumut
+ * Detect specific kota/kabupaten mentioned
+ * @returns {string[]}
  */
-export function isRelevantToSumut(text) {
-  if (!text) return false;
-
-  const hasSumut = mentionsSumut(text);
-  const hasNonSumut = mentionsNonSumut(text);
-
-  // Menyebut Sumut → lolos (mau ada sebut luar atau tidak)
-  if (hasSumut) return true;
-
-  // Tidak menyebut Sumut sama sekali → buang
-  // (entah itu berita luar, atau berita generik tanpa lokasi)
-  return false;
+export function detectKotaKab(text) {
+  if (!text) return [];
+  const lower = text.toLowerCase();
+  return ALL_REGIONS.filter((region) =>
+    lower.includes(region.toLowerCase())
+  );
 }

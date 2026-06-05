@@ -4,13 +4,12 @@
  * Status: Terverifikasi Faktual
  * Jenis: Media Siber
  *
- * PENTING: Berita yang ditampilkan hanya yang relevan dengan
- * wilayah Sumatera Utara (8 kota + 25 kabupaten).
- * Berita dari portal lain provinsi tetap diambil, tapi di-filter.
+ * Setiap provinsi punya daftar kota/kabupaten.
+ * Berita hanya ditampilkan jika menyebut wilayah provinsi yang sudah dipetakan.
  */
 
 export const MEDIA_SOURCES = [
-  // === SUMATERA UTARA (56 portal) ===
+  // === SUMATERA UTARA (54 portal) ===
   { name: "GoSumut.com", rss: "https://gosumut.com/feed", website: "https://gosumut.com", province: "Sumatera Utara" },
   { name: "KabarMedan.com", rss: "https://kabarmedan.com/feed", website: "https://kabarmedan.com", province: "Sumatera Utara" },
   { name: "RmolSumut.id", rss: "https://rmolsumut.id/feed", website: "https://rmolsumut.id", province: "Sumatera Utara" },
@@ -102,19 +101,35 @@ export const MEDIA_SOURCES = [
   { name: "PenaPost.co.id", rss: "https://penapost.co.id/feed", website: "https://penapost.co.id", province: "Aceh" },
   { name: "Metropolis.id", rss: "https://metropolis.id/feed", website: "https://metropolis.id", province: "Aceh" },
 
-  // === SUMATERA BARAT ===
-  { name: "Harianhaluan", rss: "https://harianhaluan.com/feed", website: "https://harianhaluan.com", province: "Sumatera Barat" },
-  { name: "Langgam.id", rss: "https://langgam.id/feed", website: "https://langgam.id", province: "Sumatera Barat" },
+  // === SUMATERA BARAT (20 portal) ===
+  { name: "KabarSumbar.com", rss: "https://kabarsumbar.com/feed", website: "https://kabarsumbar.com", province: "Sumatera Barat" },
+  { name: "TopSumbar.co.id", rss: "https://topsumbar.co.id/feed", website: "https://topsumbar.co.id", province: "Sumatera Barat" },
+  { name: "EkspresNews.com", rss: "https://ekspresnews.com/feed", website: "https://ekspresnews.com", province: "Sumatera Barat" },
+  { name: "MentawaiKita.com", rss: "https://mentawaikita.com/feed", website: "https://mentawaikita.com", province: "Sumatera Barat" },
+  { name: "FigurNews.com", rss: "https://figurnews.com/feed", website: "https://figurnews.com", province: "Sumatera Barat" },
+  { name: "MajalahIntrust.com", rss: "https://majalahintrust.com/feed", website: "https://majalahintrust.com", province: "Sumatera Barat" },
+  { name: "Scientia.id", rss: "https://scientia.id/feed", website: "https://scientia.id", province: "Sumatera Barat" },
+  { name: "PadangMedia.com", rss: "https://padangmedia.com/feed", website: "https://padangmedia.com", province: "Sumatera Barat" },
+  { name: "MinangkabauNews.com", rss: "https://minangkabaunews.com/feed", website: "https://minangkabaunews.com", province: "Sumatera Barat" },
+  { name: "ValoraNews.com", rss: "https://valoranews.com/feed", website: "https://valoranews.com", province: "Sumatera Barat" },
+  { name: "FajarHarapan.id", rss: "https://fajarharapan.id/feed", website: "https://fajarharapan.id", province: "Sumatera Barat" },
+  { name: "MjNews.id", rss: "https://mjnews.id/feed", website: "https://mjnews.id", province: "Sumatera Barat" },
+  { name: "LiputanKini.com", rss: "https://liputankini.com/feed", website: "https://liputankini.com", province: "Sumatera Barat" },
   { name: "Tribun Padang", rss: "https://padang.tribunnews.com/rss", website: "https://padang.tribunnews.com", province: "Sumatera Barat" },
-  { name: "Covesia", rss: "https://covesia.com/feed", website: "https://covesia.com", province: "Sumatera Barat" },
+  { name: "Investigasi.news", rss: "https://investigasi.news/feed", website: "https://investigasi.news", province: "Sumatera Barat" },
+  { name: "ReportaseInvestigasi.com", rss: "https://reportaseinvestigasi.com/feed", website: "https://reportaseinvestigasi.com", province: "Sumatera Barat" },
+  { name: "DutaMetro.com", rss: "https://dutametro.com/feed", website: "https://dutametro.com", province: "Sumatera Barat" },
+  { name: "KupasOnline.com", rss: "https://kupasonline.com/feed", website: "https://kupasonline.com", province: "Sumatera Barat" },
+  { name: "SemangatNews.com", rss: "https://semangatnews.com/feed", website: "https://semangatnews.com", province: "Sumatera Barat" },
+  { name: "RakyatTerkini.com", rss: "https://rakyatterkini.com/feed", website: "https://rakyatterkini.com", province: "Sumatera Barat" },
 
-  // === RIAU ===
+  // === RIAU (4 portal) ===
   { name: "Tribun Pekanbaru", rss: "https://pekanbaru.tribunnews.com/rss", website: "https://pekanbaru.tribunnews.com", province: "Riau" },
   { name: "GoRiau", rss: "https://goriau.com/feed", website: "https://goriau.com", province: "Riau" },
   { name: "Riaupos", rss: "https://riaupos.jawapos.com/feed", website: "https://riaupos.jawapos.com", province: "Riau" },
   { name: "Cakaplah", rss: "https://www.cakaplah.com/feed", website: "https://www.cakaplah.com", province: "Riau" },
 
-  // === KEPULAUAN RIAU ===
+  // === KEPULAUAN RIAU (3 portal) ===
   { name: "Tribun Batam", rss: "https://batam.tribunnews.com/rss", website: "https://batam.tribunnews.com", province: "Kepulauan Riau" },
   { name: "Batampos", rss: "https://batampos.co.id/feed", website: "https://batampos.co.id", province: "Kepulauan Riau" },
   { name: "Sijoritoday", rss: "https://sijoritoday.com/feed", website: "https://sijoritoday.com", province: "Kepulauan Riau" },
@@ -124,90 +139,95 @@ export const MEDIA_SOURCES = [
 export const GOOGLE_TRENDS_RSS =
   "https://trends.google.co.id/trends/trendingsearches/daily/rss?geo=ID";
 
-// Google News RSS — Sumatera Utara focused
+// Google News RSS — per province
 export const GOOGLE_NEWS_FEEDS = [
-  {
-    label: "Sumatera Utara",
-    rss: "https://news.google.com/rss/search?q=Sumatera+Utara&hl=id&gl=ID&ceid=ID:id",
-  },
-  {
-    label: "Medan",
-    rss: "https://news.google.com/rss/search?q=Medan+Sumatera+Utara&hl=id&gl=ID&ceid=ID:id",
-  },
+  { label: "Sumatera Utara", rss: "https://news.google.com/rss/search?q=Sumatera+Utara&hl=id&gl=ID&ceid=ID:id" },
+  { label: "Medan", rss: "https://news.google.com/rss/search?q=Medan+Sumatera+Utara&hl=id&gl=ID&ceid=ID:id" },
+  { label: "Aceh", rss: "https://news.google.com/rss/search?q=Aceh&hl=id&gl=ID&ceid=ID:id" },
+  { label: "Sumatera Barat", rss: "https://news.google.com/rss/search?q=Sumatera+Barat&hl=id&gl=ID&ceid=ID:id" },
 ];
 
 /**
- * Daftar Kota dan Kabupaten di Sumatera Utara
- * Berita HANYA ditampilkan jika:
- * 1. Berasal dari portal Sumatera Utara (auto-lolos), ATAU
- * 2. Menyebut salah satu kota/kabupaten ini di judul/konten
- *
- * Berita dari Jakarta, internasional, dll → DIBUANG
+ * =====================================================
+ * WILAYAH PER PROVINSI
+ * Berita hanya lolos jika menyebut wilayah di bawah ini.
+ * =====================================================
  */
-export const KOTA = [
-  "Medan",
-  "Binjai",
-  "Gunungsitoli",
-  "Padangsidimpuan",
-  "Pematangsiantar",
-  "Sibolga",
-  "Tanjungbalai",
-  "Tebing Tinggi",
+
+// --- SUMATERA UTARA ---
+export const SUMUT_KOTA = [
+  "Medan", "Binjai", "Gunungsitoli", "Padangsidimpuan",
+  "Pematangsiantar", "Sibolga", "Tanjungbalai", "Tebing Tinggi",
+];
+export const SUMUT_KABUPATEN = [
+  "Asahan", "Batu Bara", "Dairi", "Deli Serdang", "Humbang Hasundutan",
+  "Karo", "Labuhanbatu", "Labuhanbatu Selatan", "Labuhanbatu Utara",
+  "Langkat", "Mandailing Natal", "Nias", "Nias Barat", "Nias Selatan",
+  "Nias Utara", "Padang Lawas", "Padang Lawas Utara", "Pakpak Bharat",
+  "Samosir", "Serdang Bedagai", "Simalungun", "Tapanuli Selatan",
+  "Tapanuli Tengah", "Tapanuli Utara", "Toba",
+];
+export const SUMUT_EXTRA_KEYWORDS = [
+  "Sumatera Utara", "Sumut", "Sumatra Utara", "North Sumatra",
+  "Danau Toba", "Bukit Lawang", "Berastagi", "Parapat", "Prapat",
+  "Sidikalang", "Kisaran", "Rantauprapat", "Balige", "Tarutung",
+  "Panyabungan", "Stabat", "Lubukpakam", "Sei Rampah", "Pangururan",
+  "Doloksanggul", "Gunung Sitoli",
 ];
 
-export const KABUPATEN = [
-  "Asahan",
-  "Batu Bara",
-  "Dairi",
-  "Deli Serdang",
-  "Humbang Hasundutan",
-  "Karo",
-  "Labuhanbatu",
-  "Labuhanbatu Selatan",
-  "Labuhanbatu Utara",
-  "Langkat",
-  "Mandailing Natal",
-  "Nias",
-  "Nias Barat",
-  "Nias Selatan",
-  "Nias Utara",
-  "Padang Lawas",
-  "Padang Lawas Utara",
-  "Pakpak Bharat",
-  "Samosir",
-  "Serdang Bedagai",
-  "Simalungun",
-  "Tapanuli Selatan",
-  "Tapanuli Tengah",
-  "Tapanuli Utara",
-  "Toba",
+// --- ACEH ---
+export const ACEH_KOTA = [
+  "Banda Aceh", "Langsa", "Lhokseumawe", "Sabang", "Subulussalam",
+];
+export const ACEH_KABUPATEN = [
+  "Aceh Barat", "Aceh Barat Daya", "Aceh Besar", "Aceh Jaya",
+  "Aceh Selatan", "Aceh Singkil", "Aceh Tamiang", "Aceh Tengah",
+  "Aceh Tenggara", "Aceh Timur", "Aceh Utara", "Bener Meriah",
+  "Bireuen", "Gayo Lues", "Nagan Raya", "Pidie", "Pidie Jaya", "Simeulue",
+];
+export const ACEH_EXTRA_KEYWORDS = [
+  "Aceh", "NAD", "Nanggroe Aceh", "Serambi Mekkah",
+  "Meulaboh", "Takengon", "Blangkejeren", "Kutacane",
+  "Calang", "Tapaktuan", "Sinabang", "Singkil",
 ];
 
-// Gabungan semua wilayah + keyword Sumut (untuk region detection)
-export const ALL_REGIONS = [...KOTA, ...KABUPATEN];
+// --- SUMATERA BARAT ---
+export const SUMBAR_KOTA = [
+  "Padang", "Bukittinggi", "Padang Panjang", "Pariaman",
+  "Payakumbuh", "Sawahlunto", "Solok",
+];
+export const SUMBAR_KABUPATEN = [
+  "Agam", "Dharmasraya", "Kepulauan Mentawai", "Lima Puluh Kota",
+  "Padang Pariaman", "Pasaman", "Pasaman Barat", "Pesisir Selatan",
+  "Sijunjung", "Solok", "Solok Selatan", "Tanah Datar",
+];
+export const SUMBAR_EXTRA_KEYWORDS = [
+  "Sumatera Barat", "Sumbar", "Sumatra Barat", "West Sumatra",
+  "Minangkabau", "Minang", "Ranah Minang", "Batusangkar",
+  "Lubuk Basung", "Painan", "Muaro Sijunjung", "Tua Pejat",
+  "Simpang Empat", "Arosuka",
+];
 
-// Keywords yang menandakan berita relevan Sumatera Utara
-export const SUMUT_KEYWORDS = [
-  ...ALL_REGIONS,
-  "Sumatera Utara",
-  "Sumut",
-  "Sumatra Utara",
-  "North Sumatra",
-  "Danau Toba",
-  "Bukit Lawang",
-  "Berastagi",
-  "Parapat",
-  "Prapat",
-  "Sidikalang",
-  "Kisaran",
-  "Rantauprapat",
-  "Balige",
-  "Tarutung",
-  "Panyabungan",
-  "Stabat",
-  "Lubukpakam",
-  "Sei Rampah",
-  "Pangururan",
-  "Doloksanggul",
-  "Gunung Sitoli",
+/**
+ * Gabungan keyword per provinsi
+ * Digunakan di region-filter.js
+ */
+export const PROVINCE_REGIONS = {
+  "Sumatera Utara": [...SUMUT_KOTA, ...SUMUT_KABUPATEN, ...SUMUT_EXTRA_KEYWORDS],
+  "Aceh": [...ACEH_KOTA, ...ACEH_KABUPATEN, ...ACEH_EXTRA_KEYWORDS],
+  "Sumatera Barat": [...SUMBAR_KOTA, ...SUMBAR_KABUPATEN, ...SUMBAR_EXTRA_KEYWORDS],
+};
+
+// ALL_REGIONS: semua kota/kabupaten dari semua provinsi yang sudah dipetakan
+export const ALL_REGIONS = [
+  ...SUMUT_KOTA, ...SUMUT_KABUPATEN,
+  ...ACEH_KOTA, ...ACEH_KABUPATEN,
+  ...SUMBAR_KOTA, ...SUMBAR_KABUPATEN,
+];
+
+// Semua keyword valid (berita harus menyebut salah satu dari ini)
+export const ALL_VALID_KEYWORDS = [
+  ...PROVINCE_REGIONS["Sumatera Utara"],
+  ...PROVINCE_REGIONS["Aceh"],
+  ...PROVINCE_REGIONS["Sumatera Barat"],
 ];

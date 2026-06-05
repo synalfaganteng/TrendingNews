@@ -2,43 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-const KOTA = [
-  "Medan",
-  "Binjai",
-  "Gunungsitoli",
-  "Padangsidimpuan",
-  "Pematangsiantar",
-  "Sibolga",
-  "Tanjungbalai",
-  "Tebing Tinggi",
-];
-
-const KABUPATEN = [
-  "Asahan",
-  "Batu Bara",
-  "Dairi",
-  "Deli Serdang",
-  "Humbang Hasundutan",
-  "Karo",
-  "Labuhanbatu",
-  "Labuhanbatu Selatan",
-  "Labuhanbatu Utara",
-  "Langkat",
-  "Mandailing Natal",
-  "Nias",
-  "Nias Barat",
-  "Nias Selatan",
-  "Nias Utara",
-  "Padang Lawas",
-  "Padang Lawas Utara",
-  "Pakpak Bharat",
-  "Samosir",
-  "Serdang Bedagai",
-  "Simalungun",
-  "Tapanuli Selatan",
-  "Tapanuli Tengah",
-  "Tapanuli Utara",
-  "Toba",
+const PROVINCES = [
+  { value: "", label: "Semua Provinsi" },
+  { value: "Sumatera Utara", label: "Sumatera Utara" },
+  { value: "Aceh", label: "Aceh" },
+  { value: "Sumatera Barat", label: "Sumatera Barat" },
 ];
 
 const SORT_OPTIONS = [
@@ -132,16 +100,15 @@ function PlatformBadges({ platforms }) {
 export default function NewsFeed() {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [region, setRegion] = useState("");
+  const [province, setProvince] = useState("");
   const [sort, setSort] = useState("viral");
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [showAllRegions, setShowAllRegions] = useState(false);
 
   const fetchNews = useCallback(async () => {
     try {
       const params = new URLSearchParams({ limit: "150", sort });
-      if (region) {
-        params.set("region", region);
+      if (province) {
+        params.set("province", province);
       }
       const res = await fetch(`/api/news?${params.toString()}`);
       const data = await res.json();
@@ -152,99 +119,55 @@ export default function NewsFeed() {
     } finally {
       setLoading(false);
     }
-  }, [region, sort]);
+  }, [province, sort]);
 
   useEffect(() => {
     setLoading(true);
     fetchNews();
-
-    // Auto-refresh setiap 30 detik
     const interval = setInterval(fetchNews, 30000);
     return () => clearInterval(interval);
   }, [fetchNews]);
 
   return (
     <section>
-      {/* Sort Bar */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          {SORT_OPTIONS.map((opt) => (
+      {/* Filter & Sort */}
+      <div className="space-y-3 mb-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {PROVINCES.map((p) => (
             <button
-              key={opt.value}
-              onClick={() => setSort(opt.value)}
+              key={p.value}
+              onClick={() => setProvince(p.value)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                sort === opt.value
+                province === p.value
                   ? "bg-red-600 text-white"
                   : "bg-gray-800 text-gray-300 hover:bg-gray-700"
               }`}
             >
-              {opt.label}
+              {p.label}
             </button>
           ))}
         </div>
-        {lastUpdated && (
-          <span className="text-xs text-gray-500">
-            Update: {new Date(lastUpdated).toLocaleTimeString("id-ID")}
-          </span>
-        )}
-      </div>
-
-      {/* Region Filter */}
-      <div className="mb-4 bg-gray-900 rounded-xl p-3 border border-gray-800">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-gray-400 font-medium">
-            Filter Wilayah:
-          </span>
-          <button
-            onClick={() => setShowAllRegions(!showAllRegions)}
-            className="text-xs text-red-400 hover:text-red-300"
-          >
-            {showAllRegions ? "Sembunyikan" : "Tampilkan Semua"}
-          </button>
-        </div>
-
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            onClick={() => setRegion("")}
-            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-              region === ""
-                ? "bg-red-600 text-white"
-                : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-            }`}
-          >
-            Semua
-          </button>
-
-          {/* Kota */}
-          {KOTA.map((k) => (
-            <button
-              key={k}
-              onClick={() => setRegion(k)}
-              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                region === k
-                  ? "bg-red-600 text-white"
-                  : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-              }`}
-            >
-              {k}
-            </button>
-          ))}
-
-          {/* Kabupaten (show/hide) */}
-          {showAllRegions &&
-            KABUPATEN.map((k) => (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {SORT_OPTIONS.map((opt) => (
               <button
-                key={k}
-                onClick={() => setRegion(k)}
-                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                  region === k
-                    ? "bg-red-600 text-white"
-                    : "bg-gray-800/60 text-gray-500 hover:bg-gray-700"
+                key={opt.value}
+                onClick={() => setSort(opt.value)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  sort === opt.value
+                    ? "bg-gray-700 text-white border border-gray-600"
+                    : "bg-gray-800/50 text-gray-400 hover:bg-gray-800"
                 }`}
               >
-                {k}
+                {opt.label}
               </button>
             ))}
+          </div>
+          {lastUpdated && (
+            <span className="text-xs text-gray-500">
+              Update: {new Date(lastUpdated).toLocaleTimeString("id-ID")}
+            </span>
+          )}
         </div>
       </div>
 
@@ -264,9 +187,9 @@ export default function NewsFeed() {
       ) : news.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <p className="text-lg">Tidak ada berita dalam 3 jam terakhir</p>
-          {region && (
+          {province && (
             <p className="text-sm mt-1">
-              untuk wilayah &quot;{region}&quot;
+              untuk provinsi &quot;{province}&quot;
             </p>
           )}
         </div>
@@ -311,16 +234,23 @@ export default function NewsFeed() {
                     <span className="text-xs text-gray-500">
                       {item.source}
                     </span>
+                    {item.provinces && item.provinces.length > 0 && (
+                      <>
+                        <span className="text-xs text-gray-600">•</span>
+                        <span className="text-xs text-cyan-500">
+                          {item.provinces.join(", ")}
+                        </span>
+                      </>
+                    )}
                     {item.regions && item.regions.length > 0 && (
                       <>
                         <span className="text-xs text-gray-600">•</span>
                         <span className="text-xs text-emerald-500">
-                          📍 {item.regions.join(", ")}
+                          📍 {item.regions.slice(0, 3).join(", ")}
                         </span>
                       </>
                     )}
                   </div>
-                  {/* Platform predictions */}
                   {item.viral &&
                     item.viral.platforms &&
                     item.viral.platforms.length > 0 && (

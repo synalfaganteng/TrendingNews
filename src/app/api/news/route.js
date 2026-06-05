@@ -7,7 +7,8 @@ export const revalidate = 30;
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type"); // filter: media, google-news, trending
-  const region = searchParams.get("region"); // filter: kota/kabupaten
+  const province = searchParams.get("province"); // filter: Sumatera Utara, Aceh, Sumatera Barat
+  const region = searchParams.get("region"); // filter: kota/kabupaten specific
   const sort = searchParams.get("sort") || "viral"; // "viral" or "time"
   const limit = parseInt(searchParams.get("limit") || "100", 10);
 
@@ -16,6 +17,11 @@ export async function GET(request) {
   // Apply filters
   if (type) {
     news = news.filter((item) => item.type === type);
+  }
+  if (province) {
+    news = news.filter((item) =>
+      item.provinces.some((p) => p.toLowerCase() === province.toLowerCase())
+    );
   }
   if (region) {
     news = news.filter((item) =>

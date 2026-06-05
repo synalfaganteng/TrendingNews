@@ -3,9 +3,12 @@ import {
   MEDIA_SOURCES,
   GOOGLE_TRENDS_RSS,
   GOOGLE_NEWS_FEEDS,
-  ALL_REGIONS,
 } from "./sources";
-import { isRelevantToSumut } from "./region-filter";
+import {
+  isRelevantToMappedRegions,
+  detectProvinces,
+  detectKotaKab,
+} from "./region-filter";
 
 const parser = new RSSParser({
   timeout: 8000,
@@ -18,20 +21,9 @@ const parser = new RSSParser({
 const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
 
 /**
- * Detect which kota/kabupaten Sumut is mentioned in the text
- */
-function detectRegions(text) {
-  if (!text) return [];
-  const lower = text.toLowerCase();
-  return ALL_REGIONS.filter((region) =>
-    lower.includes(region.toLowerCase())
-  );
-}
-
-/**
  * Parse RSS feed items, filter to last 3 hours, normalize format
  */
-async function fetchFeed(url, sourceName, province, type = "news") {
+async function fetchFeed(url, sourceName, sourceProvince, type = "news") {
   try {
     const feed = await parser.parseURL(url);
     const now = Date.now();
@@ -49,17 +41,15 @@ async function fetchFeed(url, sourceName, province, type = "news") {
         const snippet =
           item.contentSnippet || item.content || item.description || "";
         const fullText = `${title} ${snippet}`;
-        const regions = detectRegions(fullText);
 
         return {
           title,
           link: item.link || "",
           pubDate,
           source: sourceName,
-          province,
+          sourceProvince,
           type,
           snippet,
-          regions,
           _fullText: fullText,
         };
       })
@@ -69,13 +59,12 @@ async function fetchFeed(url, sourceName, province, type = "news") {
         return true;
       });
   } catch {
-    // Silently skip feeds that fail
     return [];
   }
 }
 
 /**
- * Fetch all sources in parallel, filter to Sumut-relevant only
+ * Fetch all sources in parallel, filter to relevant regions only
  */
 export async function fetchAllNews() {
   const promises = [];
@@ -90,7 +79,7 @@ export async function fetchAllNews() {
   // 2. Google News regional feeds
   for (const gn of GOOGLE_NEWS_FEEDS) {
     promises.push(
-      fetchFeed(gn.rss, "Google News", "Sumatera Utara", "google-news")
+      fetchFeed(gn.rss, "Google News", gn.label, "google-news")
     );
   }
 
@@ -104,21 +93,20 @@ export async function fetchAllNews() {
 
   /**
    * FILTER UTAMA:
-   * SEMUA berita (termasuk dari portal Sumut) harus menyebut
-   * wilayah Sumatera Utara di judul atau kontennya.
-   *
-   * Contoh yang DIBUANG:
-   * - Tribun Medan publish berita "Santri dibakar di Lombok" → ❌
-   * - Waspada publish berita "Jokowi di Jakarta" → ❌
-   *
-   * Contoh yang LOLOS:
-   * - Tribun Medan "Banjir di Medan" → ✅
-   * - Serambi Aceh "Gubernur Sumut kunjungi Langkat" → ✅
+   * SEMUA berita harus menyebut wilayah yang sudah dipetakan.
+   * Portal Sumut yang publish berita Lombok → BUANG.
+   * Portal Aceh yang publish berita Jakarta → BUANG.
    */
-  allItems = allItems.filter((item) => isRelevantToSumut(item._fullText));
+  allItems = allItems.filter((item) =>
+    isRelevantToMappedRegions(item._fullText)
+  );
 
-  // Remove internal field
-  allItems = allItems.map(({ _fullText, ...rest }) => rest);
+  // Enrich with detected province & kota/kab
+  allItems = allItems.map(({ _fullText, ...rest }) => ({
+    ...rest,
+    provinces: detectProvinces(_fullText),
+    regions: detectKotaKab(_fullText),
+  }));
 
   // Sort by publish date descending (newest first)
   allItems.sort((a, b) => {
