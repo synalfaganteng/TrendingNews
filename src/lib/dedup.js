@@ -1,16 +1,14 @@
 /**
- * Deteksi Berita Duplikat / Rewrite
+ * Deteksi Berita Duplikat / Rewrite v2
  *
- * Membandingkan JUDUL + ISI (snippet) berita.
- * Jika dua berita membahas topik yang sama → tandai mana yang pertama publish.
- *
- * Metode:
- * 1. Keyword overlap pada judul (bobot 40%)
- * 2. Keyword overlap pada isi/snippet (bobot 40%)
- * 3. Bigram similarity pada judul (bobot 20%)
- *
- * Threshold: combined score >= 0.40 = topik sama
+ * Strategi:
+ * 1. Bandingkan dengan POOL 7 HARI (semua portal + Google News)
+ * 2. Pakai title + content similarity
+ * 3. Untuk kandidat top score, lakukan Google News search by title
+ *    untuk menangkap portal di luar daftar kita yang publish duluan
  */
+
+import { searchGoogleNewsForOriginal } from "./fetcher";
 
 const STOPWORDS = new Set([
   "yang", "dan", "di", "ke", "dari", "ini", "itu", "dengan", "untuk",
@@ -24,13 +22,10 @@ const STOPWORDS = new Set([
   "sementara", "maupun", "agar", "supaya", "jika", "kalau",
   "sebuah", "suatu", "para", "sang", "hal", "demikian",
   "selain", "ketika", "sebelum", "sesudah", "yakni", "yaitu",
-  "the", "and", "for", "was", "are", "but", "not", "you", "all",
-  "can", "had", "her", "one", "our", "out", "day", "get", "has",
+  "tentang", "hari", "tahun", "bulan", "soal", "buat", "guna",
+  "bagi", "atas", "bawah", "dia",
 ]);
 
-/**
- * Normalize text — lowercase, hapus tanda baca
- */
 function normalize(text) {
   if (!text) return "";
   return text
@@ -40,22 +35,14 @@ function normalize(text) {
     .trim();
 }
 
-/**
- * Extract meaningful keywords (hapus stopwords, minimal 3 huruf)
- */
 function extractKeywords(text) {
   const normalized = normalize(text);
   if (!normalized) return new Set();
   return new Set(
-    normalized
-      .split(" ")
-      .filter((w) => w.length >= 3 && !STOPWORDS.has(w))
+    normalized.split(" ").filter((w) => w.length >= 3 && !STOPWORDS.has(w))
   );
 }
 
-/**
- * Generate bigrams dari text
- */
 function getBigrams(text) {
   const words = normalize(text).split(" ");
   const bigrams = new Set();
@@ -65,172 +52,190 @@ function getBigrams(text) {
   return bigrams;
 }
 
-/**
- * Jaccard similarity antara dua Set
- */
 function jaccard(setA, setB) {
   if (setA.size === 0 && setB.size === 0) return 0;
   let intersection = 0;
-  for (const item of setA) {
-    if (setB.has(item)) intersection++;
-  }
+  for (const item of setA) if (setB.has(item)) intersection++;
   const union = setA.size + setB.size - intersection;
   return union === 0 ? 0 : intersection / union;
 }
 
-/**
- * Overlap coefficient — proporsi dari set terkecil yang cocok
- * Lebih baik untuk kasus di mana satu judul panjang, satu pendek
- */
 function overlapCoefficient(setA, setB) {
   if (setA.size === 0 || setB.size === 0) return 0;
   let intersection = 0;
-  for (const item of setA) {
-    if (setB.has(item)) intersection++;
-  }
+  for (const item of setA) if (setB.has(item)) intersection++;
   return intersection / Math.min(setA.size, setB.size);
 }
 
-/**
- * Calculate combined similarity between two articles
- * Uses BOTH title AND content/snippet
- */
 function getArticleSimilarity(articleA, articleB) {
   const titleA = articleA.title || "";
   const titleB = articleB.title || "";
   const contentA = articleA.snippet || "";
   const contentB = articleB.snippet || "";
 
-  // 1. Title keyword overlap (overlap coefficient — catches rewrites)
   const titleKwA = extractKeywords(titleA);
   const titleKwB = extractKeywords(titleB);
   const titleKeywordScore = overlapCoefficient(titleKwA, titleKwB);
 
-  // 2. Content/snippet keyword overlap
   const contentKwA = extractKeywords(contentA);
   const contentKwB = extractKeywords(contentB);
   const contentKeywordScore = overlapCoefficient(contentKwA, contentKwB);
 
-  // 3. Title bigram similarity (catches near-identical titles)
-  const titleBigramA = getBigrams(titleA);
-  const titleBigramB = getBigrams(titleB);
-  const titleBigramScore = jaccard(titleBigramA, titleBigramB);
+  const titleBigramScore = jaccard(getBigrams(titleA), getBigrams(titleB));
 
-  // 4. Combined full text keywords (title + content together)
   const fullKwA = extractKeywords(`${titleA} ${contentA}`);
   const fullKwB = extractKeywords(`${titleB} ${contentB}`);
   const fullKeywordScore = overlapCoefficient(fullKwA, fullKwB);
 
-  // Weighted combination:
-  // - Title keywords: 30% (catches rewritten headlines)
-  // - Content keywords: 30% (catches same story different headline)
-  // - Full text combined: 25% (overall topic match)
-  // - Title bigrams: 15% (catches copy-paste titles)
-  const combined =
+  return (
     titleKeywordScore * 0.3 +
     contentKeywordScore * 0.3 +
     fullKeywordScore * 0.25 +
-    titleBigramScore * 0.15;
-
-  return combined;
+    titleBigramScore * 0.15
+  );
 }
 
-// Threshold — 0.40 berarti ~40% kesamaan topik
 const SIMILARITY_THRESHOLD = 0.40;
 
 /**
- * Main function: detect duplicates and mark original sources
- *
- * @param {Array} items - news items (any order, will check pubDate)
- * @returns {Array} items with `originalSource` and `isOriginal` fields
+ * Format selisih waktu human-readable
  */
-export function detectDuplicates(items) {
-  // Pre-compute keywords for performance
-  const precomputed = items.map((item) => ({
-    item,
-    titleKw: extractKeywords(item.title || ""),
-    contentKw: extractKeywords(item.snippet || ""),
-    fullKw: extractKeywords(`${item.title || ""} ${item.snippet || ""}`),
-    titleBigrams: getBigrams(item.title || ""),
-  }));
+function formatTimeDiff(diffMs) {
+  const diffMinutes = Math.floor(diffMs / 60000);
+  if (diffMinutes < 60) return `${diffMinutes} menit lebih awal`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours} jam lebih awal`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} hari lebih awal`;
+}
 
-  const result = items.map((item, idx) => {
+/**
+ * Cari original source di pool (tanpa Google search tambahan)
+ */
+function findOriginalInPool(item, pool) {
+  let best = null;
+  let bestSim = 0;
+
+  for (const candidate of pool) {
+    if (candidate.link === item.link) continue;
+    if (!candidate.pubDate || !item.pubDate) continue;
+    if (candidate.pubDate >= item.pubDate) continue;
+
+    // Quick pre-filter
+    const itemKw = extractKeywords(item.title);
+    const candKw = extractKeywords(candidate.title);
+    let overlap = 0;
+    for (const kw of itemKw) if (candKw.has(kw)) overlap++;
+    if (overlap < 2) continue;
+
+    const sim = getArticleSimilarity(item, candidate);
+    if (sim >= SIMILARITY_THRESHOLD && sim > bestSim) {
+      bestSim = sim;
+      best = { candidate, sim };
+    }
+  }
+
+  return best;
+}
+
+/**
+ * Main dedup function
+ *
+ * @param {Array} displayItems - berita yang akan ditampilkan (3 jam terakhir)
+ * @param {Array} dedupPool - pool 7 hari untuk perbandingan
+ * @param {boolean} useGoogleSearch - kalau true, lakukan Google News search untuk top items
+ */
+export async function detectDuplicates(displayItems, dedupPool = [], useGoogleSearch = false) {
+  // Combine: pool harus include displayItems juga (untuk perbandingan internal)
+  const fullPool = [...displayItems];
+  const linkSet = new Set(displayItems.map((i) => i.link));
+  for (const p of dedupPool) {
+    if (!linkSet.has(p.link)) {
+      fullPool.push(p);
+      linkSet.add(p.link);
+    }
+  }
+
+  const result = [];
+
+  for (const item of displayItems) {
     let originalSource = null;
-    let highestSim = 0;
+    const found = findOriginalInPool(item, fullPool);
 
-    const current = precomputed[idx];
-
-    for (let j = 0; j < items.length; j++) {
-      if (j === idx) continue;
-
-      const other = precomputed[j];
-      const otherItem = other.item;
-
-      // Skip if same link
-      if (item.link === otherItem.link) continue;
-
-      // Only compare with items that are OLDER
-      if (!otherItem.pubDate || !item.pubDate) continue;
-      if (otherItem.pubDate >= item.pubDate) continue;
-
-      // Quick pre-filter: if titles share zero keywords, skip expensive comparison
-      let hasAnyOverlap = false;
-      for (const kw of current.titleKw) {
-        if (other.titleKw.has(kw) || other.contentKw.has(kw)) {
-          hasAnyOverlap = true;
-          break;
-        }
-      }
-      if (!hasAnyOverlap) {
-        // Also check content keywords
-        for (const kw of current.contentKw) {
-          if (other.titleKw.has(kw) || other.contentKw.has(kw)) {
-            hasAnyOverlap = true;
-            break;
-          }
-        }
-      }
-      if (!hasAnyOverlap) continue;
-
-      // Full similarity calculation
-      const sim = getArticleSimilarity(item, otherItem);
-
-      if (sim >= SIMILARITY_THRESHOLD && sim > highestSim) {
-        highestSim = sim;
-
-        // Calculate time difference
-        const diffMs = item.pubDate - otherItem.pubDate;
-        const diffMinutes = Math.floor(diffMs / 60000);
-        let timeDiff;
-        if (diffMinutes < 60) {
-          timeDiff = `${diffMinutes} menit lebih awal`;
-        } else {
-          const diffHours = Math.floor(diffMinutes / 60);
-          if (diffHours < 24) {
-            timeDiff = `${diffHours} jam lebih awal`;
-          } else {
-            const diffDays = Math.floor(diffHours / 24);
-            timeDiff = `${diffDays} hari lebih awal`;
-          }
-        }
-
-        originalSource = {
-          source: otherItem.source,
-          title: otherItem.title,
-          link: otherItem.link,
-          pubDate: otherItem.pubDate,
-          timeDiff,
-          similarity: Math.round(sim * 100),
-        };
-      }
+    if (found) {
+      const { candidate, sim } = found;
+      const timeDiff = formatTimeDiff(item.pubDate - candidate.pubDate);
+      originalSource = {
+        source: candidate.source,
+        title: candidate.title,
+        link: candidate.link,
+        pubDate: candidate.pubDate,
+        timeDiff,
+        similarity: Math.round(sim * 100),
+        viaGoogleSearch: false,
+      };
     }
 
-    return {
+    result.push({
       ...item,
       originalSource,
       isOriginal: originalSource === null,
-    };
-  });
+    });
+  }
+
+  // Optional: Google News fallback search untuk top viral items yang belum punya original
+  if (useGoogleSearch) {
+    // Hanya untuk items dengan viral score >= 50 yang belum punya original
+    const candidates = result
+      .filter((item) => !item.originalSource)
+      .filter((item) => (item.viral?.viralScore || 0) >= 50)
+      .slice(0, 10); // batasi 10 query saja
+
+    const searchPromises = candidates.map(async (item) => {
+      // Ambil 5-7 kata penting dari judul untuk dijadikan query
+      const keywords = [...extractKeywords(item.title)].slice(0, 6);
+      if (keywords.length < 3) return;
+
+      const query = keywords.join(" ");
+
+      try {
+        const searchResults = await searchGoogleNewsForOriginal(query);
+        let best = null;
+        let bestSim = 0;
+
+        for (const candidate of searchResults) {
+          if (candidate.link === item.link) continue;
+          if (!candidate.pubDate || !item.pubDate) continue;
+          if (candidate.pubDate >= item.pubDate) continue;
+
+          const sim = getArticleSimilarity(item, candidate);
+          if (sim >= SIMILARITY_THRESHOLD && sim > bestSim) {
+            bestSim = sim;
+            best = { candidate, sim };
+          }
+        }
+
+        if (best) {
+          const { candidate, sim } = best;
+          const timeDiff = formatTimeDiff(item.pubDate - candidate.pubDate);
+          item.originalSource = {
+            source: candidate.source,
+            title: candidate.title,
+            link: candidate.link,
+            pubDate: candidate.pubDate,
+            timeDiff,
+            similarity: Math.round(sim * 100),
+            viaGoogleSearch: true,
+          };
+          item.isOriginal = false;
+        }
+      } catch {
+        // ignore
+      }
+    });
+
+    await Promise.all(searchPromises);
+  }
 
   return result;
 }
