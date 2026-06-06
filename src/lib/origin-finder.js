@@ -23,6 +23,7 @@
 
 import RSSParser from "rss-parser";
 import { verifySameStory, isDeepSeekEnabled } from "./deepseek.js";
+import { serpSearchCandidates, isSerperEnabled } from "./serp-finder.js";
 
 const parser = new RSSParser({
   timeout: 8000,
@@ -403,18 +404,36 @@ export async function findOriginal(item) {
   const cached = getCached(cacheKey);
   if (cached !== null) return cached;
 
+  // ===== KUMPULKAN KANDIDAT =====
+  // Sumber 1: Serper (Google Search lengkap — Top Stories + organic + situs kecil)
+  // Sumber 2: Google News RSS (fallback / tambahan)
+  let rawCandidates = [];
+
+  if (isSerperEnabled()) {
+    // Serper adalah sumber utama — jauh lebih lengkap
+    try {
+      const serpResults = await serpSearchCandidates(item.title);
+      rawCandidates.push(...serpResults);
+    } catch {
+      // ignore, lanjut ke RSS
+    }
+  }
+
+  // RSS sebagai pelengkap (tetap dipakai walau Serper aktif, untuk coverage maksimal)
   const queries = buildQueries(item.title);
-  if (queries.length === 0) {
+  if (queries.length > 0) {
+    const rssResults = await Promise.all(queries.map(searchGoogleNews));
+    rawCandidates.push(...rssResults.flat());
+  }
+
+  if (rawCandidates.length === 0) {
     setCached(cacheKey, null);
     return null;
   }
 
-  const allResults = await Promise.all(queries.map(searchGoogleNews));
-  const merged = allResults.flat();
-
   // Dedupe by link, validate pubDate
   const candidates = new Map();
-  for (const r of merged) {
+  for (const r of rawCandidates) {
     if (!r.link) continue;
     if (r.link === item.link) continue;
     if (!isValidPubDate(r.pubDate, item.pubDate)) continue;
@@ -455,7 +474,7 @@ export async function findOriginal(item) {
   let winner = null;
 
   if (isDeepSeekEnabled()) {
-    const toVerify = matches.slice(0, 4);
+    const toVerify = matches.slice(0, 6);
     for (const match of toVerify) {
       const verdict = await verifySameStory(item, match.candidate);
       if (verdict === null) {
