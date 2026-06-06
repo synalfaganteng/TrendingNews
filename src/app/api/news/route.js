@@ -12,6 +12,9 @@ export async function GET(request) {
   const sort = searchParams.get("sort") || "viral";
   const limit = parseInt(searchParams.get("limit") || "100", 10);
   const skipOrigin = searchParams.get("skipOrigin") === "true";
+  // Ambang skor minimal untuk cari sumber asli (hemat kuota Serper).
+  // Default 50 — berita di bawah ini tidak dicari originalnya.
+  const originMinScore = parseInt(searchParams.get("originMinScore") || "50", 10);
 
   // Fetch DISPLAY items only (3 jam max — strict)
   let news = await fetchAllNews();
@@ -39,15 +42,30 @@ export async function GET(request) {
 
   news = news.slice(0, limit);
 
-  // Cari ORIGINAL untuk tiap berita (terpisah, tidak terikat 3 jam)
+  // Cari ORIGINAL hanya untuk berita berpotensi (skor >= originMinScore).
+  // Ini menghemat kuota Serper drastis — berita biasa tidak dicari originalnya.
   if (!skipOrigin && news.length > 0) {
-    // Concurrency lebih rendah (4) karena verifikasi AI menambah latensi
-    const originals = await findOriginalsForItems(news, 4);
-    news = news.map((item, idx) => ({
-      ...item,
-      originalSource: originals[idx],
-      isOriginal: !originals[idx],
-    }));
+    const targets = news.filter(
+      (item) => (item.viral?.viralScore || 0) >= originMinScore
+    );
+
+    if (targets.length > 0) {
+      const originals = await findOriginalsForItems(targets, 4);
+      // Map hasil balik ke item berdasarkan link
+      const originByLink = new Map();
+      targets.forEach((item, idx) => {
+        originByLink.set(item.link, originals[idx]);
+      });
+
+      news = news.map((item) => {
+        if (originByLink.has(item.link)) {
+          const orig = originByLink.get(item.link);
+          return { ...item, originalSource: orig, isOriginal: !orig };
+        }
+        // Berita skor rendah: tidak dicari, status original tidak diketahui
+        return { ...item, originalSource: null, isOriginal: null };
+      });
+    }
   }
 
   return Response.json({

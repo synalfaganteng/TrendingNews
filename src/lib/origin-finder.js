@@ -373,9 +373,9 @@ function extractSource(item) {
   return m ? m[1].trim() : "Unknown";
 }
 
-// In-memory cache
+// In-memory cache (hasil + "tidak ketemu" sama-sama di-cache untuk hemat kuota Serper)
 const cache = new Map();
-const CACHE_TTL = 15 * 60 * 1000;
+const CACHE_TTL = 60 * 60 * 1000; // 1 jam (sebelumnya 15 menit)
 
 function getCached(key) {
   const c = cache.get(key);

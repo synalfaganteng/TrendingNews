@@ -73,7 +73,7 @@ function NewsCard({ item, isNew }) {
             {v.contentType.type}
           </span>
         )}
-        {item.isOriginal && (
+        {item.isOriginal === true && (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-500/15 text-green-400 border border-green-500/40 text-sm font-bold">
             ⚡ Berita Pertama
           </span>
@@ -150,18 +150,19 @@ export default function NewsFeed() {
   // Simpan link yang sedang tampil untuk deteksi berita baru
   const shownLinksRef = useRef(new Set());
 
-  const doFetch = useCallback(async () => {
+  const doFetch = useCallback(async (skipOrigin = false) => {
     const params = new URLSearchParams({ limit: "100", sort });
     if (province) params.set("province", province);
+    if (skipOrigin) params.set("skipOrigin", "true");
     const res = await fetch(`/api/news?${params}`);
     return res.json();
   }, [province, sort]);
 
-  // Fetch awal / saat filter berubah → langsung tampilkan
+  // Fetch awal / saat filter berubah → langsung tampilkan (dengan origin search)
   const initialLoad = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await doFetch();
+      const data = await doFetch(false);
       const items = data.items || [];
       setNews(items);
       setCount(data.count || 0);
@@ -176,18 +177,16 @@ export default function NewsFeed() {
     }
   }, [doFetch]);
 
-  // Polling → simpan ke pending kalau ada berita baru (tidak ganggu scroll)
+  // Polling RINGAN → skipOrigin=true (tidak panggil Serper/AI, hemat kuota).
+  // Hanya cek apakah ada berita baru. Origin dicari saat user klik "reveal".
   const pollUpdate = useCallback(async () => {
     try {
-      const data = await doFetch();
+      const data = await doFetch(true);
       const items = data.items || [];
       setUpdated(data.lastUpdated);
-
-      // Deteksi berita yang belum pernah tampil
       const fresh = items.filter((i) => !shownLinksRef.current.has(i.link));
-
       if (fresh.length > 0) {
-        setPending(items); // simpan snapshot terbaru
+        setPending(items);
       }
     } catch (err) {
       console.error(err);
@@ -199,27 +198,37 @@ export default function NewsFeed() {
   }, [initialLoad]);
 
   useEffect(() => {
-    const i = setInterval(pollUpdate, 30000); // cek tiap 30 detik
+    const i = setInterval(pollUpdate, 30000); // cek tiap 30 detik (ringan)
     return () => clearInterval(i);
   }, [pollUpdate]);
 
-  // Tampilkan berita baru saat user klik tombol
-  const revealNew = () => {
+  // Tampilkan berita baru → fetch ulang dengan origin search untuk yang baru
+  const revealNew = async () => {
     if (pending.length === 0) return;
     const freshLinks = new Set(
       pending
         .filter((i) => !shownLinksRef.current.has(i.link))
         .map((i) => i.link)
     );
+    // Tampilkan dulu (cepat), lalu fetch versi lengkap dengan origin di belakang
     setNews(pending);
     setCount(pending.length);
     setNewLinks(freshLinks);
     shownLinksRef.current = new Set(pending.map((i) => i.link));
     setPending([]);
-    // Scroll ke atas feed
     window.scrollTo({ top: 0, behavior: "smooth" });
-    // Hapus highlight "BARU" setelah 8 detik
     setTimeout(() => setNewLinks(new Set()), 8000);
+
+    // Fetch versi dengan origin source (skor tinggi saja, di server)
+    try {
+      const data = await doFetch(false);
+      if (data.items) {
+        setNews(data.items);
+        shownLinksRef.current = new Set(data.items.map((i) => i.link));
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // Hitung berapa berita baru di pending

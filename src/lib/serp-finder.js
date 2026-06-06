@@ -206,27 +206,32 @@ function extractDomain(url) {
 }
 
 /**
- * MAIN: cari semua kandidat berita untuk sebuah judul.
- * Gabung hasil News + Search, dedupe by link.
+ * MAIN: cari kandidat berita untuk sebuah judul.
+ * HEMAT KUOTA: hanya 1 panggilan (endpoint /news yang sudah ada tanggal).
+ * Endpoint /search hanya dipakai kalau /news kosong (jarang).
  */
-export async function serpSearchCandidates(title) {
+export async function serpSearchCandidates(title, { allowSearchFallback = false } = {}) {
   if (!isSerperEnabled()) return [];
 
-  // Query: judul utuh (Google handle relevance sendiri)
   const query = title.slice(0, 200);
 
-  const [newsResults, searchResults] = await Promise.all([
-    serperNews(query),
-    serperSearch(query),
-  ]);
+  // Panggilan utama: /news (1 kredit)
+  const newsResults = await serperNews(query);
 
-  const merged = [...newsResults, ...searchResults];
-
-  // Dedupe by link
+  // Dedupe
   const byLink = new Map();
-  for (const r of merged) {
+  for (const r of newsResults) {
     if (!r.link) continue;
     if (!byLink.has(r.link)) byLink.set(r.link, r);
+  }
+
+  // Fallback ke /search HANYA kalau /news kosong & diizinkan (hemat kuota)
+  if (byLink.size === 0 && allowSearchFallback) {
+    const searchResults = await serperSearch(query);
+    for (const r of searchResults) {
+      if (!r.link) continue;
+      if (!byLink.has(r.link)) byLink.set(r.link, r);
+    }
   }
 
   return [...byLink.values()];
