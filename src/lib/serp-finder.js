@@ -28,35 +28,55 @@ export function parseRelativeDate(dateStr, now = Date.now()) {
   if (!dateStr) return null;
   const s = dateStr.toLowerCase().trim();
 
-  // Coba parse sebagai tanggal absolut dulu (mis. "Jun 4, 2026")
-  const absolute = Date.parse(dateStr);
-  if (!Number.isNaN(absolute)) {
-    // Validasi: tidak di masa depan, tidak lebih dari 1 tahun lalu
-    if (absolute <= now + 86400000 && now - absolute < 365 * 86400000) {
-      return absolute;
-    }
-  }
+  // ===== PRIORITAS 1: RELATIVE PARSING =====
+  // (harus didahulukan karena Date.parse bisa salah baca "minggu"=Sunday dll)
 
-  // Relative parsing
-  // angka + satuan
-  const match = s.match(/(\d+)\s*(detik|menit|jam|hari|minggu|bulan|second|minute|hour|day|week|month|min|hr|sec)/);
+  // "kemarin" / "yesterday"
+  if (/\bkemarin\b|\byesterday\b/.test(s)) return now - 86400000;
+  // "hari ini" / "today" / "just now" / "baru saja"
+  if (/hari ini|today|just now|baru saja|moments? ago/.test(s)) return now;
+
+  // angka + satuan (cek "minggu/week" SEBELUM yang lain karena "minggu" ambigu)
+  const match = s.match(/(\d+)\s*(detik|menit|jam|hari|minggu|bulan|tahun|seconds?|minutes?|hours?|days?|weeks?|months?|years?|mins?|hrs?|secs?)\b/);
   if (match) {
     const num = parseInt(match[1], 10);
     const unit = match[2];
     let ms = 0;
-    if (/detik|second|sec/.test(unit)) ms = num * 1000;
-    else if (/menit|minute|min/.test(unit)) ms = num * 60000;
-    else if (/jam|hour|hr/.test(unit)) ms = num * 3600000;
-    else if (/hari|day/.test(unit)) ms = num * 86400000;
-    else if (/minggu|week/.test(unit)) ms = num * 7 * 86400000;
-    else if (/bulan|month/.test(unit)) ms = num * 30 * 86400000;
+    // Cek dari yang paling spesifik. Pakai ^...$ supaya "min" tidak match "minggu".
+    if (/^(minggu|weeks?)$/.test(unit)) ms = num * 7 * 86400000;
+    else if (/^(detik|seconds?|secs?)$/.test(unit)) ms = num * 1000;
+    else if (/^(menit|minutes?|mins?)$/.test(unit)) ms = num * 60000;
+    else if (/^(jam|hours?|hrs?)$/.test(unit)) ms = num * 3600000;
+    else if (/^(hari|days?)$/.test(unit)) ms = num * 86400000;
+    else if (/^(bulan|months?)$/.test(unit)) ms = num * 30 * 86400000;
+    else if (/^(tahun|years?)$/.test(unit)) ms = num * 365 * 86400000;
     return now - ms;
   }
 
-  // "kemarin" / "yesterday"
-  if (/kemarin|yesterday/.test(s)) return now - 86400000;
-  // "hari ini" / "today" / "just now" / "baru saja"
-  if (/hari ini|today|just now|baru saja/.test(s)) return now;
+  // ===== PRIORITAS 2: ABSOLUTE DATE (Indonesia) =====
+  // Format: "27 Agu 2025", "24 Des 2018", "2 Apr 2026"
+  const idMonths = {
+    jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, jun: 5,
+    jul: 6, agu: 7, agt: 7, sep: 8, okt: 9, nov: 10, des: 11,
+  };
+  const idMatch = s.match(/(\d{1,2})\s+([a-z]{3})[a-z]*\s+(\d{4})/);
+  if (idMatch) {
+    const day = parseInt(idMatch[1], 10);
+    const monKey = idMatch[2].slice(0, 3);
+    const year = parseInt(idMatch[3], 10);
+    if (monKey in idMonths) {
+      const ts = new Date(year, idMonths[monKey], day).getTime();
+      if (!Number.isNaN(ts) && ts <= now + 86400000) return ts;
+    }
+  }
+
+  // ===== PRIORITAS 3: standar Date.parse (English format) =====
+  const absolute = Date.parse(dateStr);
+  if (!Number.isNaN(absolute)) {
+    if (absolute <= now + 86400000 && now - absolute < 365 * 86400000) {
+      return absolute;
+    }
+  }
 
   return null;
 }
