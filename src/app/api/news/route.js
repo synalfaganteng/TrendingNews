@@ -41,7 +41,8 @@ export async function GET(request) {
 
   // Cari ORIGINAL untuk tiap berita (terpisah, tidak terikat 3 jam)
   if (!skipOrigin && news.length > 0) {
-    const originals = await findOriginalsForItems(news, 6);
+    // Concurrency lebih rendah (4) karena verifikasi AI menambah latensi
+    const originals = await findOriginalsForItems(news, 4);
     news = news.map((item, idx) => ({
       ...item,
       originalSource: originals[idx],

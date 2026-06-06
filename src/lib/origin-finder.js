@@ -22,6 +22,7 @@
  */
 
 import RSSParser from "rss-parser";
+import { verifySameStory, isDeepSeekEnabled } from "./deepseek.js";
 
 const parser = new RSSParser({
   timeout: 8000,
@@ -428,7 +429,7 @@ export async function findOriginal(item) {
   // Build profile untuk item
   const itemProfile = buildProfile(item);
 
-  // Evaluate setiap kandidat
+  // Evaluate setiap kandidat (keyword pre-filter)
   const matches = [];
   for (const cand of candidates.values()) {
     const candProfile = buildProfile(cand);
@@ -444,9 +445,41 @@ export async function findOriginal(item) {
     return null;
   }
 
-  // Pilih: paling AWAL pubDate-nya (sumber pertama tayang)
+  // Urutkan dari paling AWAL pubDate (sumber pertama tayang)
   matches.sort((a, b) => a.candidate.pubDate - b.candidate.pubDate);
-  const winner = matches[0];
+
+  // ===== VERIFIKASI DENGAN DEEPSEEK (jika tersedia) =====
+  // Strategi: cek kandidat dari yang paling awal. LLM konfirmasi apakah
+  // benar peristiwa sama. Ambil yang PALING AWAL yang dikonfirmasi LLM.
+  // Hanya verifikasi maksimal 4 kandidat teratas (hemat biaya & waktu).
+  let winner = null;
+
+  if (isDeepSeekEnabled()) {
+    const toVerify = matches.slice(0, 4);
+    for (const match of toVerify) {
+      const verdict = await verifySameStory(item, match.candidate);
+      if (verdict === null) {
+        // LLM gagal/timeout → fallback: terima kalau keyword score tinggi
+        if (match.comp.titleScore >= 0.55 || match.comp.fivewSignals >= 3) {
+          winner = match;
+          break;
+        }
+        continue;
+      }
+      if (verdict.same && verdict.confidence >= 60) {
+        winner = match;
+        break; // sudah yang paling awal (matches sudah tersortir)
+      }
+    }
+  } else {
+    // Tanpa LLM: ambil yang paling awal dari keyword match
+    winner = matches[0];
+  }
+
+  if (!winner) {
+    setCached(cacheKey, null);
+    return null;
+  }
 
   const result = {
     source: winner.candidate.source,
@@ -456,6 +489,7 @@ export async function findOriginal(item) {
     timeDiff: formatDiff(item.pubDate - winner.candidate.pubDate),
     titleScore: Math.round(winner.comp.titleScore * 100),
     fivewSignals: winner.comp.fivewSignals,
+    verifiedByAI: isDeepSeekEnabled(),
   };
 
   setCached(cacheKey, result);

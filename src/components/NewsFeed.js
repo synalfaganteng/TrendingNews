@@ -126,6 +126,11 @@ function NewsCard({ item, isNew }) {
           <span className="text-sm text-amber-400/80 ml-2">
             ({item.originalSource.timeDiff})
           </span>
+          {item.originalSource.verifiedByAI && (
+            <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-xs font-semibold">
+              🤖 Diverifikasi AI
+            </span>
+          )}
         </div>
       )}
     </article>
