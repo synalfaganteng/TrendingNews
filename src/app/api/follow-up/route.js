@@ -4,6 +4,8 @@ import { detectSpikes } from "@/src/lib/analytics";
 import { predictFollowUp } from "@/src/lib/predictor";
 
 export const revalidate = 3600; // Cache for 1 hour to save API cost
+export const maxDuration = 60; // Allow longer execution for AI
+
 
 export async function GET() {
   try {
@@ -11,8 +13,9 @@ export async function GET() {
     news = attachViralScores(news);
     const spikes = detectSpikes(news);
 
-    // Ambil top 5 topik paling viral hari ini
-    const topSpikes = spikes.slice(0, 5);
+    // Ambil top 20 topik paling viral hari ini
+    const topSpikes = spikes.slice(0, 20);
+
 
     const predictions = await predictFollowUp(topSpikes);
 
