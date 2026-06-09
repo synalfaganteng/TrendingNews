@@ -27,9 +27,9 @@ export async function generateFeedInsights(newsItems, sortType = "viral") {
     console.error("Feed AI cache read error:", err);
   }
 
-  // Siapkan top 5 berita saja untuk konteks AI agar lebih cepat (<5 detik)
-  const top5 = newsItems.slice(0, 5);
-  const contextData = top5.map((item, i) => {
+  // Siapkan top 15 berita untuk konteks AI
+  const top15 = newsItems.slice(0, 15);
+  const contextData = top15.map((item, i) => {
     return `ID: ${i}\nJudul: ${item.title}`;
   }).join("\n\n");
 
@@ -45,7 +45,7 @@ Konteks Feed: ${sortContext}
 
 Tugasmu:
 1. Buat "summary" (ringkasan) singkat 1-2 kalimat (maks 30 kata) tentang topik apa yang sedang mendominasi/menjadi sorotan di feed berita ini secara keseluruhan.
-2. Untuk setiap berita yang diberikan (dari ID 0 sampai 4), berikan "reason" (alasan) 1 kalimat singkat (maks 15 kata) kenapa berita ini penting atau menarik dibaca.
+2. Untuk setiap berita yang diberikan (dari ID 0 sampai 14), berikan "reason" (alasan) 1 kalimat singkat (maks 15 kata) kenapa berita ini penting atau menarik dibaca.
 3. Berikan HANYA dalam format JSON dengan struktur:
 {
   "summary": "Saat ini feed didominasi oleh ... dan ...",
@@ -58,13 +58,13 @@ Tugasmu:
     },
     {
       role: "user",
-      content: `Berikut adalah 5 berita teratas di feed:\n\n${contextData}\n\nBerikan analisis JSON mu.`
+      content: `Berikut adalah 15 berita teratas di feed:\n\n${contextData}\n\nBerikan analisis JSON mu.`
     }
   ];
 
   const controller = new AbortController();
-  // STRICT 6 second timeout to prevent Vercel 504 Gateway Timeout (10s limit)
-  const timeout = setTimeout(() => controller.abort(), 6000);
+  // Karena sekarang kita memakai streaming API, kita bebas memakai timeout lebih panjang
+  const timeout = setTimeout(() => controller.abort(), 20000);
 
   try {
     const res = await fetch(DEEPSEEK_URL, {
@@ -107,8 +107,8 @@ Tugasmu:
       if (parsed.reasons) {
         for (const [idxStr, reason] of Object.entries(parsed.reasons)) {
           const idx = parseInt(idxStr, 10);
-          if (!isNaN(idx) && top5[idx]) {
-            mappedReasons[top5[idx].link] = reason;
+          if (!isNaN(idx) && top15[idx]) {
+            mappedReasons[top15[idx].link] = reason;
           }
         }
       }

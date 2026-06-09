@@ -14,8 +14,8 @@ export async function GET(request) {
   const limit = parseInt(searchParams.get("limit") || "100", 10);
   const skipOrigin = searchParams.get("skipOrigin") === "true";
   // Ambang skor minimal untuk cari sumber asli (hemat kuota Serper).
-  // Default 50 — berita di bawah ini tidak dicari originalnya.
-  const originMinScore = parseInt(searchParams.get("originMinScore") || "50", 10);
+  // Default 30 — berita di bawah ini tidak dicari originalnya agar hemat kuota Serper.
+  const originMinScore = parseInt(searchParams.get("originMinScore") || "30", 10);
 
   // Fetch DISPLAY items only (3 jam max — strict)
   let news = await fetchAllNews();
@@ -43,50 +43,73 @@ export async function GET(request) {
 
   news = news.slice(0, limit);
 
-  let feedInsights = null;
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      // Send whitespace immediately to bypass Vercel 10s execution limit
+      controller.enqueue(encoder.encode(" "));
 
-  if (!skipOrigin && news.length > 0) {
-    const targets = news.filter(
-      (item) => (item.viral?.viralScore || 0) >= originMinScore
-    );
+      try {
+        let feedInsights = null;
 
-    // Run both AI insights and Origin Search concurrently to beat the 10s Serverless limit
-    const [originals, insights] = await Promise.all([
-      targets.length > 0 ? findOriginalsForItems(targets, 4) : Promise.resolve([]),
-      generateFeedInsights(news, sort)
-    ]);
+        if (!skipOrigin && news.length > 0) {
+          const targets = news.filter(
+            (item) => (item.viral?.viralScore || 0) >= originMinScore
+          );
 
-    feedInsights = insights;
+          // Run both AI insights and Origin Search concurrently
+          const [originals, insights] = await Promise.all([
+            targets.length > 0 ? findOriginalsForItems(targets, 4) : Promise.resolve([]),
+            generateFeedInsights(news, sort)
+          ]);
 
-    if (targets.length > 0 && originals.length > 0) {
-      const originByLink = new Map();
-      targets.forEach((item, idx) => {
-        originByLink.set(item.link, originals[idx]);
-      });
+          feedInsights = insights;
 
-      news = news.map((item) => {
-        if (originByLink.has(item.link)) {
-          const orig = originByLink.get(item.link);
-          return { ...item, originalSource: orig, isOriginal: !orig };
+          if (targets.length > 0 && originals.length > 0) {
+            const originByLink = new Map();
+            targets.forEach((item, idx) => {
+              originByLink.set(item.link, originals[idx]);
+            });
+
+            news = news.map((item) => {
+              if (originByLink.has(item.link)) {
+                const orig = originByLink.get(item.link);
+                return { ...item, originalSource: orig, isOriginal: !orig };
+              }
+              return { ...item, originalSource: null, isOriginal: null };
+            });
+          }
+
+          if (feedInsights && feedInsights.reasons) {
+            news = news.map((item) => {
+              if (feedInsights.reasons[item.link]) {
+                return { ...item, aiReason: feedInsights.reasons[item.link] };
+              }
+              return item;
+            });
+          }
         }
-        return { ...item, originalSource: null, isOriginal: null };
-      });
-    }
 
-    if (feedInsights && feedInsights.reasons) {
-      news = news.map((item) => {
-        if (feedInsights.reasons[item.link]) {
-          return { ...item, aiReason: feedInsights.reasons[item.link] };
-        }
-        return item;
-      });
+        controller.enqueue(encoder.encode(JSON.stringify({
+          count: news.length,
+          lastUpdated: new Date().toISOString(),
+          feedSummary: feedInsights?.summary || null,
+          items: news,
+        })));
+      } catch (err) {
+        console.error("News API Error:", err);
+        controller.enqueue(encoder.encode(JSON.stringify({ error: "Internal Server Error" })));
+      } finally {
+        controller.close();
+      }
     }
-  }
+  });
 
-  return Response.json({
-    count: news.length,
-    lastUpdated: new Date().toISOString(),
-    feedSummary: feedInsights?.summary || null,
-    items: news,
+  return new Response(stream, {
+    headers: { 
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive'
+    },
   });
 }

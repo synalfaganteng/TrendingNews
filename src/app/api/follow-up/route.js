@@ -7,30 +7,45 @@ export const revalidate = 60;
 export const maxDuration = 60;
 
 export async function GET() {
-  try {
-    let news = await fetchAllNews();
-    news = attachViralScores(news);
-    const spikes = detectSpikes(news);
+  const encoder = new TextEncoder();
+  
+  const stream = new ReadableStream({
+    async start(controller) {
+      // Send whitespace immediately to bypass Vercel 10s execution limit (First byte sent)
+      controller.enqueue(encoder.encode(" "));
+      
+      try {
+        let news = await fetchAllNews();
+        news = attachViralScores(news);
+        const spikes = detectSpikes(news);
 
-    // Ambil top 20 topik paling viral hari ini
-    const topSpikes = spikes.slice(0, 20);
+        // Ambil top 20 topik paling viral hari ini
+        const topSpikes = spikes.slice(0, 20);
 
+        const predictions = await predictFollowUp(topSpikes);
 
-    const predictions = await predictFollowUp(topSpikes);
-
-    if (!predictions) {
-      return Response.json(
-        { error: "Gagal mendapatkan prediksi dari AI" },
-        { status: 500 }
-      );
+        if (!predictions) {
+          controller.enqueue(encoder.encode(JSON.stringify({ error: "Gagal mendapatkan prediksi dari AI" })));
+        } else {
+          controller.enqueue(encoder.encode(JSON.stringify({
+            lastUpdated: new Date().toISOString(),
+            predictions,
+          })));
+        }
+      } catch (error) {
+        console.error("Follow-Up API Error:", error);
+        controller.enqueue(encoder.encode(JSON.stringify({ error: "Internal Server Error" })));
+      } finally {
+        controller.close();
+      }
     }
+  });
 
-    return Response.json({
-      lastUpdated: new Date().toISOString(),
-      predictions,
-    });
-  } catch (error) {
-    console.error("Follow-Up API Error:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
-  }
+  return new Response(stream, {
+    headers: { 
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive'
+    },
+  });
 }
