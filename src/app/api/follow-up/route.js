@@ -3,9 +3,8 @@ import { attachViralScores } from "@/src/lib/viral-scorer";
 import { detectSpikes } from "@/src/lib/analytics";
 import { predictFollowUp } from "@/src/lib/predictor";
 
-export const revalidate = 3600; // Cache for 1 hour to save API cost
-export const maxDuration = 60; // Allow longer execution for AI
-
+export const revalidate = 60;
+export const runtime = 'edge'; // Edge runtime gives 25s timeout on Hobby!
 
 export async function GET() {
   try {

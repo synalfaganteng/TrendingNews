@@ -2,12 +2,9 @@
  * Follow-up Predictor using DeepSeek LLM with Caching
  */
 
-import fs from "fs";
-import path from "path";
-import os from "os";
-
 const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
-const CACHE_FILE = path.join(os.tmpdir(), "followup-cache-v3.json"); // Busted cache for 15 items fast
+
+let memoryCache = { timestamp: 0, predictions: [] };
 const CACHE_TTL = 2 * 60 * 60 * 1000; // 2 hours
 
 export async function predictFollowUp(topSpikes) {
@@ -19,16 +16,9 @@ export async function predictFollowUp(topSpikes) {
   }
 
   // Check cache first
-  try {
-    if (fs.existsSync(CACHE_FILE)) {
-      const cacheData = JSON.parse(fs.readFileSync(CACHE_FILE, "utf-8"));
-      if (Date.now() - cacheData.timestamp < CACHE_TTL) {
-        console.log("Serving Follow-Up from Cache");
-        return cacheData.predictions;
-      }
-    }
-  } catch (err) {
-    console.error("Cache read error:", err);
+  if (memoryCache.predictions.length > 0 && Date.now() - memoryCache.timestamp < CACHE_TTL) {
+    console.log("Serving Follow-Up from Memory Cache");
+    return memoryCache.predictions;
   }
 
   // Siapkan data berita hari ini
@@ -44,7 +34,7 @@ export async function predictFollowUp(topSpikes) {
       content: `Kamu adalah Editor Berita Senior dan Analis Prediktif yang ahli melihat tren berita hari ini untuk memprediksi sudut pandang (angle) berita atau kejadian lanjutan (follow-up) esok hari.
 Tugasmu:
 1. Analisa tren berita hari ini yang diberikan.
-2. Prediksi TEPAT 15 peristiwa lanjutan atau sudut pandang berita untuk esok hari. WAJIB BERIKAN 15 PREDIKSI. (Kurangi dari 20 agar lebih cepat).
+2. Prediksi TEPAT 20 peristiwa lanjutan atau sudut pandang berita untuk esok hari. WAJIB BERIKAN 20 PREDIKSI.
 3. Untuk mempercepat, "description" MAKSIMAL 15 KATA SAJA! Sangat singkat dan padat.
 4. Berikan "score" (0-100) dan "scoreLabel" (misal: "Sangat Layak", "Layak").
 5. Berikan jawaban HANYA format JSON:
@@ -66,8 +56,8 @@ Tugasmu:
   ];
 
   const controller = new AbortController();
-  // STRICT 8.5 second timeout to prevent Vercel 10s Serverless timeout
-  const timeout = setTimeout(() => controller.abort(), 8500); // 45s timeout for long generation
+  // Edge runtime limit is 25s, so we can set timeout to 23s.
+  const timeout = setTimeout(() => controller.abort(), 23000);
 
   try {
     const res = await fetch(DEEPSEEK_URL, {
@@ -107,16 +97,12 @@ Tugasmu:
       const parsed = JSON.parse(cleanContent);
       const predictions = parsed.predictions || [];
       
-      // Save to cache gracefully
+      // Save to memory cache
       if (predictions.length > 0) {
-        try {
-          fs.writeFileSync(CACHE_FILE, JSON.stringify({
-            timestamp: Date.now(),
-            predictions
-          }));
-        } catch (writeErr) {
-          console.error("Gagal menulis cache follow-up:", writeErr);
-        }
+        memoryCache = {
+          timestamp: Date.now(),
+          predictions
+        };
       }
 
       return predictions;

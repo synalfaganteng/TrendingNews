@@ -43,16 +43,22 @@ export async function GET(request) {
 
   news = news.slice(0, limit);
 
-  // Cari ORIGINAL hanya untuk berita berpotensi (skor >= originMinScore).
-  // Ini menghemat kuota Serper drastis — berita biasa tidak dicari originalnya.
+  let feedInsights = null;
+
   if (!skipOrigin && news.length > 0) {
     const targets = news.filter(
       (item) => (item.viral?.viralScore || 0) >= originMinScore
     );
 
-    if (targets.length > 0) {
-      const originals = await findOriginalsForItems(targets, 4);
-      // Map hasil balik ke item berdasarkan link
+    // Run both AI insights and Origin Search concurrently to beat the 10s Serverless limit
+    const [originals, insights] = await Promise.all([
+      targets.length > 0 ? findOriginalsForItems(targets, 4) : Promise.resolve([]),
+      generateFeedInsights(news, sort)
+    ]);
+
+    feedInsights = insights;
+
+    if (targets.length > 0 && originals.length > 0) {
       const originByLink = new Map();
       targets.forEach((item, idx) => {
         originByLink.set(item.link, originals[idx]);
@@ -63,19 +69,10 @@ export async function GET(request) {
           const orig = originByLink.get(item.link);
           return { ...item, originalSource: orig, isOriginal: !orig };
         }
-        // Berita skor rendah: tidak dicari, status original tidak diketahui
         return { ...item, originalSource: null, isOriginal: null };
       });
     }
-  }
 
-  // Tambahkan AI Insights (Summary & Reasons)
-  // Hanya ambil jika skipOrigin false (bukan polling) agar hemat kuota AI
-  let feedInsights = null;
-  if (!skipOrigin && news.length > 0) {
-    feedInsights = await generateFeedInsights(news, sort);
-    
-    // Pasangkan reasons ke item
     if (feedInsights && feedInsights.reasons) {
       news = news.map((item) => {
         if (feedInsights.reasons[item.link]) {
