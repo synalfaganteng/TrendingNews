@@ -1,6 +1,4 @@
 import { predictFollowUp } from "./src/lib/predictor.js";
-import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
 
 const mockSpikes = [
   {

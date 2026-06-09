@@ -7,7 +7,7 @@ import path from "path";
 import os from "os";
 
 const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
-const CACHE_FILE = path.join(os.tmpdir(), "followup-cache-v2.json"); // Busted cache for 20 items
+const CACHE_FILE = path.join(os.tmpdir(), "followup-cache-v3.json"); // Busted cache for 15 items fast
 const CACHE_TTL = 2 * 60 * 60 * 1000; // 2 hours
 
 export async function predictFollowUp(topSpikes) {
@@ -44,9 +44,10 @@ export async function predictFollowUp(topSpikes) {
       content: `Kamu adalah Editor Berita Senior dan Analis Prediktif yang ahli melihat tren berita hari ini untuk memprediksi sudut pandang (angle) berita atau kejadian lanjutan (follow-up) esok hari.
 Tugasmu:
 1. Analisa tren berita hari ini yang diberikan.
-2. Prediksi TEPAT 20 peristiwa lanjutan atau sudut pandang berita untuk esok hari berdasarkan tren tersebut. WAJIB BERIKAN 20 PREDIKSI, jangan kurang.
-3. Berikan "score" (0-100) yang merepresentasikan seberapa layak/besar kemungkinan berita ini harus di-follow up besok. Berikan juga "scoreLabel" (misal: "Sangat Layak", "Layak", "Biasa").
-4. Berikan jawaban HANYA dalam format JSON dengan struktur:
+2. Prediksi TEPAT 15 peristiwa lanjutan atau sudut pandang berita untuk esok hari. WAJIB BERIKAN 15 PREDIKSI. (Kurangi dari 20 agar lebih cepat).
+3. Untuk mempercepat, "description" MAKSIMAL 15 KATA SAJA! Sangat singkat dan padat.
+4. Berikan "score" (0-100) dan "scoreLabel" (misal: "Sangat Layak", "Layak").
+5. Berikan jawaban HANYA format JSON:
 {
   "predictions": [
     {
@@ -65,7 +66,8 @@ Tugasmu:
   ];
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 45000); // 45s timeout for long generation
+  // STRICT 8.5 second timeout to prevent Vercel 10s Serverless timeout
+  const timeout = setTimeout(() => controller.abort(), 8500); // 45s timeout for long generation
 
   try {
     const res = await fetch(DEEPSEEK_URL, {
@@ -84,14 +86,15 @@ Tugasmu:
       signal: controller.signal,
     });
 
-    clearTimeout(timeout);
-
     if (!res.ok) {
+      clearTimeout(timeout);
       console.error("DeepSeek Predictor error:", res.status);
       return null;
     }
 
     const data = await res.json();
+    clearTimeout(timeout);
+    
     const content = data.choices?.[0]?.message?.content;
     if (!content) {
       console.error("DeepSeek returned empty content");
