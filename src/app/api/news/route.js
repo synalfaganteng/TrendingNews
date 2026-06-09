@@ -1,6 +1,7 @@
 import { fetchAllNews } from "@/src/lib/fetcher";
 import { attachViralScores } from "@/src/lib/viral-scorer";
 import { findOriginalsForItems } from "@/src/lib/origin-finder";
+import { generateFeedInsights } from "@/src/lib/feed-ai";
 
 export const revalidate = 60;
 export const maxDuration = 60;
@@ -68,9 +69,27 @@ export async function GET(request) {
     }
   }
 
+  // Tambahkan AI Insights (Summary & Reasons)
+  // Hanya ambil jika skipOrigin false (bukan polling) agar hemat kuota AI
+  let feedInsights = null;
+  if (!skipOrigin && news.length > 0) {
+    feedInsights = await generateFeedInsights(news, sort);
+    
+    // Pasangkan reasons ke item
+    if (feedInsights && feedInsights.reasons) {
+      news = news.map((item) => {
+        if (feedInsights.reasons[item.link]) {
+          return { ...item, aiReason: feedInsights.reasons[item.link] };
+        }
+        return item;
+      });
+    }
+  }
+
   return Response.json({
     count: news.length,
     lastUpdated: new Date().toISOString(),
+    feedSummary: feedInsights?.summary || null,
     items: news,
   });
 }

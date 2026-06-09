@@ -1,0 +1,129 @@
+import fs from "fs";
+import path from "path";
+import os from "os";
+
+const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
+
+function getCachePath(sort) {
+  return path.join(os.tmpdir(), \`feed-ai-cache-\${sort}.json\`);
+}
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+export async function generateFeedInsights(newsItems, sortType = "viral") {
+  const key = process.env.DEEPSEEK_API_KEY;
+  if (!key || !newsItems || newsItems.length === 0) return null;
+
+  const cacheFile = getCachePath(sortType);
+
+  // Cek cache
+  try {
+    if (fs.existsSync(cacheFile)) {
+      const cacheData = JSON.parse(fs.readFileSync(cacheFile, "utf-8"));
+      if (Date.now() - cacheData.timestamp < CACHE_TTL) {
+        return cacheData.data;
+      }
+    }
+  } catch (err) {
+    console.error("Feed AI cache read error:", err);
+  }
+
+  // Siapkan top 15 berita untuk konteks AI
+  const top15 = newsItems.slice(0, 15);
+  const contextData = top15.map((item, i) => {
+    return \`ID: \${i}\nJudul: \${item.title}\nKutipan: \${item.snippet?.slice(0, 100)}...\`;
+  }).join("\n\n");
+
+  const sortContext = sortType === "viral" 
+    ? "Berita Paling Viral (Banyak dibahas portal berita)" 
+    : "Berita Paling Baru (Baru saja dirilis)";
+
+  const messages = [
+    {
+      role: "system",
+      content: \`Kamu adalah Asisten Jurnalis AI Senior yang bertugas menganalisis umpan (feed) berita saat ini.
+Konteks Feed: \${sortContext}
+
+Tugasmu:
+1. Buat "summary" (ringkasan) singkat 1-2 kalimat (maks 30 kata) tentang topik apa yang sedang mendominasi/menjadi sorotan di feed berita ini secara keseluruhan.
+2. Untuk setiap berita yang diberikan (dari ID 0 sampai 9 maksimal 10), berikan "reason" (alasan) 1 kalimat singkat (maks 15 kata) kenapa berita ini penting atau menarik dibaca.
+3. Berikan HANYA dalam format JSON dengan struktur:
+{
+  "summary": "Saat ini feed didominasi oleh ... dan ...",
+  "reasons": {
+    "0": "Melibatkan tokoh politik besar.",
+    "1": "Berdampak langsung pada lalu lintas jalan tol.",
+    "2": "Memicu perdebatan panas di media sosial."
+  }
+}\`
+    },
+    {
+      role: "user",
+      content: \`Berikut adalah 15 berita teratas di feed:\n\n\${contextData}\n\nBerikan analisis JSON mu.\`
+    }
+  ];
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+
+  try {
+    const res = await fetch(DEEPSEEK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: \`Bearer \${key}\`,
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages,
+        max_tokens: 1000,
+        temperature: 0.7,
+        response_format: { type: "json_object" },
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      console.error("Feed AI error:", res.status);
+      return null;
+    }
+
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return null;
+
+    try {
+      const parsed = JSON.parse(content);
+      
+      // Petakan alasan dari indeks array ke link/URL berita agar mudah dicocokkan di frontend
+      const mappedReasons = {};
+      if (parsed.reasons) {
+        for (const [idxStr, reason] of Object.entries(parsed.reasons)) {
+          const idx = parseInt(idxStr, 10);
+          if (!isNaN(idx) && top15[idx]) {
+            mappedReasons[top15[idx].link] = reason;
+          }
+        }
+      }
+
+      const result = {
+        summary: parsed.summary || "",
+        reasons: mappedReasons,
+      };
+
+      // Simpan ke cache
+      fs.writeFileSync(cacheFile, JSON.stringify({
+        timestamp: Date.now(),
+        data: result
+      }));
+
+      return result;
+    } catch {
+      return null;
+    }
+  } catch (err) {
+    clearTimeout(timeout);
+    return null;
+  }
+}

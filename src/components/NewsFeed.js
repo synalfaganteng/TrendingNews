@@ -135,9 +135,22 @@ function NewsCard({ item, isNew }) {
           )}
         </div>
       )}
+
+      {/* AI Reason Insight */}
+      {item.aiReason && (
+        <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-indigo-900/40 to-purple-900/20 border border-indigo-500/30 shadow-inner">
+          <p className="text-sm text-indigo-200 leading-relaxed flex items-start gap-2">
+            <span className="text-lg">🤖</span>
+            <span>
+              <strong className="text-indigo-300 font-bold">Kenapa Penting?</strong> {item.aiReason}
+            </span>
+          </p>
+        </div>
+      )}
     </article>
   );
 }
+
 
 export default function NewsFeed() {
   const [news, setNews] = useState([]);
@@ -148,6 +161,7 @@ export default function NewsFeed() {
   const [sort, setSort] = useState("viral");
   const [count, setCount] = useState(0);
   const [updated, setUpdated] = useState(null);
+  const [feedSummary, setFeedSummary] = useState(null);
 
   // Simpan link yang sedang tampil untuk deteksi berita baru
   const shownLinksRef = useRef(new Set());
@@ -169,6 +183,7 @@ export default function NewsFeed() {
       setNews(items);
       setCount(data.count || 0);
       setUpdated(data.lastUpdated);
+      setFeedSummary(data.feedSummary || null);
       setPending([]);
       setNewLinks(new Set());
       shownLinksRef.current = new Set(items.map((i) => i.link));
@@ -226,6 +241,7 @@ export default function NewsFeed() {
       const data = await doFetch(false);
       if (data.items) {
         setNews(data.items);
+        setFeedSummary(data.feedSummary || feedSummary);
         shownLinksRef.current = new Set(data.items.map((i) => i.link));
       }
     } catch (err) {
@@ -322,6 +338,20 @@ export default function NewsFeed() {
         </div>
       ) : (
         <div className="space-y-3">
+          {/* AI Feed Summary */}
+          {feedSummary && (
+            <div className="mb-4 p-5 rounded-2xl bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border border-indigo-500/40 shadow-lg relative overflow-hidden animate-fade-up">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-10 -mt-10" />
+              <h3 className="text-base font-bold text-white flex items-center gap-2 mb-2 relative z-10">
+                <span className="text-xl animate-pulse">🤖</span>
+                Ringkasan AI Terkini
+              </h3>
+              <p className="text-indigo-100/90 text-sm md:text-base leading-relaxed relative z-10">
+                {feedSummary}
+              </p>
+            </div>
+          )}
+
           {news.map((item, idx) => (
             <NewsCard
               key={`${item.link}-${idx}`}
@@ -334,3 +364,4 @@ export default function NewsFeed() {
     </section>
   );
 }
+
