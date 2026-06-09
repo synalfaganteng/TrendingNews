@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import TomorrowFollowUp from "./TomorrowFollowUp";
 
 const PROVINCES = [
   { value: "", label: "Semua" },
@@ -14,6 +15,7 @@ const PROVINCES = [
 const SORT_OPTIONS = [
   { value: "viral", label: "🔥 Paling Viral" },
   { value: "time", label: "🕐 Paling Baru" },
+  { value: "followup", label: "🔮 Follow Up Besok" },
 ];
 
 function timeAgo(timestamp) {
@@ -300,7 +302,9 @@ export default function NewsFeed() {
       )}
 
       {/* List */}
-      {loading ? (
+      {sort === "followup" ? (
+        <TomorrowFollowUp />
+      ) : loading ? (
         <div className="space-y-3">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="h-32 rounded-2xl bg-white/5 animate-pulse" />
