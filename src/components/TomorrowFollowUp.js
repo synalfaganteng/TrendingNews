@@ -152,6 +152,29 @@ export default function TomorrowFollowUp() {
                 <p className="text-gray-300 text-sm md:text-base leading-relaxed">
                   {p.description}
                 </p>
+
+                {/* Real World Match (Serper API Result) */}
+                {p.realWorldMatch && (
+                  <div className="mt-4 p-3 md:p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col md:flex-row gap-3 items-start md:items-center">
+                    <div className="shrink-0 text-2xl drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]">🎯</div>
+                    <div>
+                      <p className="text-xs text-amber-200/80 uppercase font-bold tracking-wider mb-1">
+                        Sudah Diliput Media
+                      </p>
+                      <a 
+                        href={p.realWorldMatch.link} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="text-amber-100 font-bold hover:text-amber-400 hover:underline transition-colors block text-sm md:text-base leading-snug"
+                      >
+                        {p.realWorldMatch.title}
+                      </a>
+                      <p className="text-xs text-amber-300/60 mt-1">
+                        Sumber: {p.realWorldMatch.source}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           );

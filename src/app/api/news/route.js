@@ -1,6 +1,5 @@
 import { fetchAllNews } from "@/src/lib/fetcher";
 import { attachViralScores } from "@/src/lib/viral-scorer";
-import { findOriginalsForItems } from "@/src/lib/origin-finder";
 import { generateFeedInsights } from "@/src/lib/feed-ai";
 
 export const revalidate = 60;
@@ -13,9 +12,6 @@ export async function GET(request) {
   const sort = searchParams.get("sort") || "viral";
   const limit = parseInt(searchParams.get("limit") || "100", 10);
   const skipOrigin = searchParams.get("skipOrigin") === "true";
-  // Ambang skor minimal untuk cari sumber asli (hemat kuota Serper).
-  // Default 30 — berita di bawah ini tidak dicari originalnya agar hemat kuota Serper.
-  const originMinScore = parseInt(searchParams.get("originMinScore") || "30", 10);
 
   // Fetch DISPLAY items only (3 jam max — strict)
   let news = await fetchAllNews();
@@ -53,32 +49,8 @@ export async function GET(request) {
         let feedInsights = null;
 
         if (!skipOrigin && news.length > 0) {
-          const targets = news.filter(
-            (item) => (item.viral?.viralScore || 0) >= originMinScore
-          );
-
-          // Run both AI insights and Origin Search concurrently
-          const [originals, insights] = await Promise.all([
-            targets.length > 0 ? findOriginalsForItems(targets, 4) : Promise.resolve([]),
-            generateFeedInsights(news, sort)
-          ]);
-
-          feedInsights = insights;
-
-          if (targets.length > 0 && originals.length > 0) {
-            const originByLink = new Map();
-            targets.forEach((item, idx) => {
-              originByLink.set(item.link, originals[idx]);
-            });
-
-            news = news.map((item) => {
-              if (originByLink.has(item.link)) {
-                const orig = originByLink.get(item.link);
-                return { ...item, originalSource: orig, isOriginal: !orig };
-              }
-              return { ...item, originalSource: null, isOriginal: null };
-            });
-          }
+          // Hanya jalankan DeepSeek AI untuk summary (Sangat Hemat Waktu & Kuota)
+          feedInsights = await generateFeedInsights(news, sort);
 
           if (feedInsights && feedInsights.reasons) {
             news = news.map((item) => {
