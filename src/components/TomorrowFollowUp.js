@@ -72,7 +72,7 @@ export default function TomorrowFollowUp() {
         
         {/* Progress simulator */}
         <div className="w-64 h-2 bg-black/50 rounded-full overflow-hidden border border-indigo-500/20">
-          <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-[progress_15s_ease-out_forwards] w-[5%]" style={{ width: \`\${Math.min(95, timePassed * 5)}%\` }} />
+          <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-[progress_15s_ease-out_forwards] w-[5%]" style={{ width: `${Math.min(95, timePassed * 5)}%` }} />
         </div>
         <p className="text-xs text-indigo-400 mt-3 tabular-nums font-mono">
           {timePassed} detik berlalu (estimasi 15-30 detik)
@@ -126,11 +126,11 @@ export default function TomorrowFollowUp() {
           return (
             <div 
               key={idx} 
-              className={\`relative rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group
-                \${isTop3 
+              className={`relative rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group
+                ${isTop3 
                   ? "bg-gradient-to-br from-indigo-900/40 to-fuchsia-900/20 border-indigo-400/40 hover:border-indigo-300/60 shadow-indigo-500/10" 
                   : "bg-white/[0.03] border-white/10 hover:border-white/20 hover:bg-white/[0.05]"
-                }\`}
+                }`}
             >
               {isTop3 && (
                 <div className="absolute -top-3 -right-3 w-12 h-12 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center font-black text-white shadow-lg shadow-amber-500/30 transform rotate-12 border-2 border-slate-900">
@@ -142,8 +142,8 @@ export default function TomorrowFollowUp() {
                 <ScoreBadge score={p.score} label={p.scoreLabel} />
               </div>
               
-              <h4 className={\`font-black text-lg mb-2 leading-snug transition-colors line-clamp-2
-                \${isTop3 ? "text-indigo-100 group-hover:text-white" : "text-gray-200 group-hover:text-indigo-200"}\`}>
+              <h4 className={`font-black text-lg mb-2 leading-snug transition-colors line-clamp-2
+                ${isTop3 ? "text-indigo-100 group-hover:text-white" : "text-gray-200 group-hover:text-indigo-200"}`}>
                 {p.title}
               </h4>
               
