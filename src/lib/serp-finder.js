@@ -17,7 +17,24 @@ const SERPER_NEWS_URL = "https://google.serper.dev/news";
 const SERPER_SEARCH_URL = "https://google.serper.dev/search";
 
 export function isSerperEnabled() {
-  return !!process.env.SERPER_API_KEY;
+  const keys = (process.env.SERPER_API_KEY || "").split(",").map(k => k.trim()).filter(Boolean);
+  return keys.length > 0;
+}
+
+let currentKeyIndex = 0;
+
+function getSerperKey() {
+  const keys = (process.env.SERPER_API_KEY || "").split(",").map(k => k.trim()).filter(Boolean);
+  if (keys.length === 0) return null;
+  return keys[currentKeyIndex % keys.length];
+}
+
+function rotateSerperKey() {
+  const keys = (process.env.SERPER_API_KEY || "").split(",").map(k => k.trim()).filter(Boolean);
+  if (keys.length > 1) {
+    currentKeyIndex++;
+    console.log(`Rotated Serper API Key to index ${currentKeyIndex % keys.length}`);
+  }
 }
 
 /**
@@ -85,7 +102,7 @@ export function parseRelativeDate(dateStr, now = Date.now()) {
  * Cari di Google News via Serper
  */
 async function serperNews(query) {
-  const key = process.env.SERPER_API_KEY;
+  let key = getSerperKey();
   if (!key) return [];
 
   const controller = new AbortController();
@@ -108,33 +125,52 @@ async function serperNews(query) {
     });
     clearTimeout(timeout);
 
+    if (res.status === 403 || res.status === 429) {
+      console.warn(`Serper API Key exhausted (${res.status}). Rotating key...`);
+      rotateSerperKey();
+      // Retry once with new key
+      key = getSerperKey();
+      const retryRes = await fetch(SERPER_NEWS_URL, {
+        method: "POST",
+        headers: { "X-API-KEY": key, "Content-Type": "application/json" },
+        body: JSON.stringify({ q: query, gl: "id", hl: "id", num: 20 }),
+      });
+      if (!retryRes.ok) return [];
+      const data = await retryRes.json();
+      return formatSerperResponse(data.news || []);
+    }
+
     if (!res.ok) {
       console.error("Serper news error:", res.status);
       return [];
     }
 
     const data = await res.json();
-    const now = Date.now();
-
-    return (data.news || []).map((item) => ({
-      title: item.title || "",
-      link: item.link || "",
-      snippet: item.snippet || "",
-      source: item.source || extractDomain(item.link),
-      pubDate: parseRelativeDate(item.date, now),
-      rawDate: item.date,
-    }));
+    return formatSerperResponse(data.news || []);
   } catch (err) {
     clearTimeout(timeout);
     return [];
   }
 }
 
+function formatSerperResponse(items) {
+  const now = Date.now();
+  return items.map((item) => ({
+    title: item.title || "",
+    link: item.link || "",
+    snippet: item.snippet || "",
+    source: item.source || extractDomain(item.link),
+    pubDate: parseRelativeDate(item.date, now),
+    rawDate: item.date,
+  }));
+}
+// (Removed duplicate catch block)
+
 /**
  * Cari di Google Search (organic + topStories) via Serper
  */
 async function serperSearch(query) {
-  const key = process.env.SERPER_API_KEY;
+  let key = getSerperKey();
   if (!key) return [];
 
   const controller = new AbortController();
@@ -156,6 +192,11 @@ async function serperSearch(query) {
       signal: controller.signal,
     });
     clearTimeout(timeout);
+
+    if (res.status === 403 || res.status === 429) {
+      rotateSerperKey();
+      return []; // Just return empty for search fallback on quota exhaustion to save time
+    }
 
     if (!res.ok) {
       console.error("Serper search error:", res.status);
