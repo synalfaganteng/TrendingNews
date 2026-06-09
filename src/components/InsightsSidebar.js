@@ -1,5 +1,7 @@
 "use client";
 
+import TomorrowFollowUp from "./TomorrowFollowUp";
+
 function Bar({ label, value, max, color = "bg-rose-500", rank }) {
   const pct = max > 0 ? (value / max) * 100 : 0;
   return (
@@ -58,6 +60,9 @@ export default function InsightsSidebar({ analytics, trending }) {
       <h2 className="text-lg font-black text-white px-1 flex items-center gap-2">
         📊 Analisa Berita
       </h2>
+
+      {/* Prediksi Follow Up */}
+      <TomorrowFollowUp />
 
       {/* Viral distribution */}
       <Section title="Tingkat Viral" icon="🎯">
