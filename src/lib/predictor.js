@@ -93,22 +93,32 @@ Tugasmu:
 
     const data = await res.json();
     const content = data.choices?.[0]?.message?.content;
-    if (!content) return null;
+    if (!content) {
+      console.error("DeepSeek returned empty content");
+      return null;
+    }
 
     try {
-      const parsed = JSON.parse(content);
+      // Hilangkan wrapper markdown bawaan AI (misal ```json ... ```)
+      const cleanContent = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      const parsed = JSON.parse(cleanContent);
       const predictions = parsed.predictions || [];
       
-      // Save to cache
+      // Save to cache gracefully
       if (predictions.length > 0) {
-        fs.writeFileSync(CACHE_FILE, JSON.stringify({
-          timestamp: Date.now(),
-          predictions
-        }));
+        try {
+          fs.writeFileSync(CACHE_FILE, JSON.stringify({
+            timestamp: Date.now(),
+            predictions
+          }));
+        } catch (writeErr) {
+          console.error("Gagal menulis cache follow-up:", writeErr);
+        }
       }
 
       return predictions;
-    } catch {
+    } catch (parseErr) {
+      console.error("Gagal memparsing JSON dari DeepSeek:", parseErr, content);
       return null;
     }
   } catch (err) {

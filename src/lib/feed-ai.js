@@ -91,10 +91,14 @@ Tugasmu:
 
     const data = await res.json();
     const content = data.choices?.[0]?.message?.content;
-    if (!content) return null;
+    if (!content) {
+      console.error("DeepSeek feed-ai returned empty content");
+      return null;
+    }
 
     try {
-      const parsed = JSON.parse(content);
+      const cleanContent = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      const parsed = JSON.parse(cleanContent);
       
       // Petakan alasan dari indeks array ke link/URL berita agar mudah dicocokkan di frontend
       const mappedReasons = {};
@@ -112,14 +116,19 @@ Tugasmu:
         reasons: mappedReasons,
       };
 
-      // Simpan ke cache
-      fs.writeFileSync(cacheFile, JSON.stringify({
-        timestamp: Date.now(),
-        data: result
-      }));
+      // Simpan ke cache gracefully
+      try {
+        fs.writeFileSync(cacheFile, JSON.stringify({
+          timestamp: Date.now(),
+          data: result
+        }));
+      } catch (writeErr) {
+        console.error("Gagal menulis cache feed-ai:", writeErr);
+      }
 
       return result;
-    } catch {
+    } catch (parseErr) {
+      console.error("Gagal memparsing JSON dari DeepSeek (feed-ai):", parseErr, content);
       return null;
     }
   } catch (err) {
