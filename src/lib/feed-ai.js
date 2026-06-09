@@ -5,7 +5,7 @@ import os from "os";
 const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
 
 function getCachePath(sort) {
-  return path.join(os.tmpdir(), \`feed-ai-cache-\${sort}.json\`);
+  return path.join(os.tmpdir(), `feed-ai-cache-${sort}.json`);
 }
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
@@ -30,7 +30,7 @@ export async function generateFeedInsights(newsItems, sortType = "viral") {
   // Siapkan top 15 berita untuk konteks AI
   const top15 = newsItems.slice(0, 15);
   const contextData = top15.map((item, i) => {
-    return \`ID: \${i}\nJudul: \${item.title}\nKutipan: \${item.snippet?.slice(0, 100)}...\`;
+    return `ID: ${i}\nJudul: ${item.title}\nKutipan: ${item.snippet?.slice(0, 100)}...`;
   }).join("\n\n");
 
   const sortContext = sortType === "viral" 
@@ -40,8 +40,8 @@ export async function generateFeedInsights(newsItems, sortType = "viral") {
   const messages = [
     {
       role: "system",
-      content: \`Kamu adalah Asisten Jurnalis AI Senior yang bertugas menganalisis umpan (feed) berita saat ini.
-Konteks Feed: \${sortContext}
+      content: `Kamu adalah Asisten Jurnalis AI Senior yang bertugas menganalisis umpan (feed) berita saat ini.
+Konteks Feed: ${sortContext}
 
 Tugasmu:
 1. Buat "summary" (ringkasan) singkat 1-2 kalimat (maks 30 kata) tentang topik apa yang sedang mendominasi/menjadi sorotan di feed berita ini secara keseluruhan.
@@ -54,11 +54,11 @@ Tugasmu:
     "1": "Berdampak langsung pada lalu lintas jalan tol.",
     "2": "Memicu perdebatan panas di media sosial."
   }
-}\`
+}`
     },
     {
       role: "user",
-      content: \`Berikut adalah 15 berita teratas di feed:\n\n\${contextData}\n\nBerikan analisis JSON mu.\`
+      content: `Berikut adalah 15 berita teratas di feed:\n\n${contextData}\n\nBerikan analisis JSON mu.`
     }
   ];
 
@@ -70,7 +70,7 @@ Tugasmu:
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: \`Bearer \${key}\`,
+        Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify({
         model: "deepseek-chat",
