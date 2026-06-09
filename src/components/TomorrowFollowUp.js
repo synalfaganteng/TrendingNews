@@ -118,38 +118,41 @@ export default function TomorrowFollowUp() {
         </div>
       </div>
 
-      {/* Grid List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* List Layout */}
+      <div className="flex flex-col gap-4">
         {predictions.map((p, idx) => {
           const isTop3 = idx < 3;
           
           return (
             <div 
               key={idx} 
-              className={`relative rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group
+              className={`relative rounded-xl border p-5 transition-all duration-300 hover:bg-white/[0.08] hover:shadow-xl group flex flex-col md:flex-row gap-5 items-start
                 ${isTop3 
-                  ? "bg-gradient-to-br from-indigo-900/40 to-fuchsia-900/20 border-indigo-400/40 hover:border-indigo-300/60 shadow-indigo-500/10" 
-                  : "bg-white/[0.03] border-white/10 hover:border-white/20 hover:bg-white/[0.05]"
+                  ? "bg-gradient-to-r from-indigo-900/40 to-fuchsia-900/10 border-indigo-400/40 shadow-indigo-500/10" 
+                  : "bg-white/[0.02] border-white/10"
                 }`}
             >
-              {isTop3 && (
-                <div className="absolute -top-3 -right-3 w-12 h-12 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center font-black text-white shadow-lg shadow-amber-500/30 transform rotate-12 border-2 border-slate-900">
-                  #{idx + 1}
-                </div>
-              )}
-              
-              <div className="flex items-center gap-3 mb-3">
-                <ScoreBadge score={p.score} label={p.scoreLabel} />
+              {/* Nomor Urut Bulat di Kiri */}
+              <div className={`shrink-0 flex items-center justify-center w-12 h-12 rounded-full font-black text-xl shadow-lg border-2 
+                ${isTop3 ? "bg-gradient-to-br from-yellow-400 to-amber-600 text-white border-yellow-200 shadow-amber-500/30" : "bg-slate-800 text-gray-300 border-slate-600"}
+              `}>
+                {idx + 1}
               </div>
               
-              <h4 className={`font-black text-lg mb-2 leading-snug transition-colors line-clamp-2
-                ${isTop3 ? "text-indigo-100 group-hover:text-white" : "text-gray-200 group-hover:text-indigo-200"}`}>
-                {p.title}
-              </h4>
-              
-              <p className="text-gray-400 text-sm leading-relaxed line-clamp-3 group-hover:text-gray-300 transition-colors">
-                {p.description}
-              </p>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <ScoreBadge score={p.score} label={p.scoreLabel} />
+                </div>
+                
+                <h4 className={`font-black text-xl mb-3 leading-snug transition-colors
+                  ${isTop3 ? "text-indigo-100 group-hover:text-white" : "text-gray-100 group-hover:text-indigo-200"}`}>
+                  {p.title}
+                </h4>
+                
+                <p className="text-gray-300 text-sm md:text-base leading-relaxed">
+                  {p.description}
+                </p>
+              </div>
             </div>
           );
         })}

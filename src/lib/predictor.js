@@ -7,7 +7,7 @@ import path from "path";
 import os from "os";
 
 const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
-const CACHE_FILE = path.join(os.tmpdir(), "followup-cache.json");
+const CACHE_FILE = path.join(os.tmpdir(), "followup-cache-v2.json"); // Busted cache for 20 items
 const CACHE_TTL = 2 * 60 * 60 * 1000; // 2 hours
 
 export async function predictFollowUp(topSpikes) {
@@ -43,8 +43,8 @@ export async function predictFollowUp(topSpikes) {
       role: "system",
       content: `Kamu adalah Editor Berita Senior dan Analis Prediktif yang ahli melihat tren berita hari ini untuk memprediksi sudut pandang (angle) berita atau kejadian lanjutan (follow-up) esok hari.
 Tugasmu:
-1. Analisa hingga 20 tren berita hari ini yang diberikan.
-2. Prediksi 10 hingga 20 peristiwa lanjutan atau sudut pandang berita untuk esok hari berdasarkan tren tersebut. Buatlah prediksi yang tajam dan masuk akal.
+1. Analisa tren berita hari ini yang diberikan.
+2. Prediksi TEPAT 20 peristiwa lanjutan atau sudut pandang berita untuk esok hari berdasarkan tren tersebut. WAJIB BERIKAN 20 PREDIKSI, jangan kurang.
 3. Berikan "score" (0-100) yang merepresentasikan seberapa layak/besar kemungkinan berita ini harus di-follow up besok. Berikan juga "scoreLabel" (misal: "Sangat Layak", "Layak", "Biasa").
 4. Berikan jawaban HANYA dalam format JSON dengan struktur:
 {
