@@ -4,7 +4,7 @@ import { detectSpikes } from "@/src/lib/analytics";
 import { predictFollowUp } from "@/src/lib/predictor";
 
 export const revalidate = 60;
-export const runtime = 'edge'; // Edge runtime gives 25s timeout on Hobby!
+export const maxDuration = 60;
 
 export async function GET() {
   try {

@@ -34,7 +34,7 @@ export async function predictFollowUp(topSpikes) {
       content: `Kamu adalah Editor Berita Senior dan Analis Prediktif yang ahli melihat tren berita hari ini untuk memprediksi sudut pandang (angle) berita atau kejadian lanjutan (follow-up) esok hari.
 Tugasmu:
 1. Analisa tren berita hari ini yang diberikan.
-2. Prediksi TEPAT 20 peristiwa lanjutan atau sudut pandang berita untuk esok hari. WAJIB BERIKAN 20 PREDIKSI.
+2. Prediksi TEPAT 10 peristiwa lanjutan atau sudut pandang berita untuk esok hari. WAJIB BERIKAN 10 PREDIKSI agar diproses dengan super cepat.
 3. Untuk mempercepat, "description" MAKSIMAL 15 KATA SAJA! Sangat singkat dan padat.
 4. Berikan "score" (0-100) dan "scoreLabel" (misal: "Sangat Layak", "Layak").
 5. Berikan jawaban HANYA format JSON:
@@ -51,13 +51,13 @@ Tugasmu:
     },
     {
       role: "user",
-      content: `Berikut adalah 20 berita paling trending di Sumatera hari ini:\n\n${contextData}\n\nBerikan prediksi follow-up untuk besok dalam format JSON. Urutkan dari score tertinggi ke terendah.`
+      content: `Berikut adalah berita paling trending di Sumatera hari ini:\n\n${contextData}\n\nBerikan 10 prediksi follow-up untuk besok dalam format JSON. Urutkan dari score tertinggi ke terendah.`
     }
   ];
 
   const controller = new AbortController();
-  // Edge runtime limit is 25s, so we can set timeout to 23s.
-  const timeout = setTimeout(() => controller.abort(), 23000);
+  // Serverless timeout is 10s on Vercel Hobby. Limit AI to 8.5s.
+  const timeout = setTimeout(() => controller.abort(), 8500);
 
   try {
     const res = await fetch(DEEPSEEK_URL, {
