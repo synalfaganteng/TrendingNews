@@ -63,3 +63,7 @@ Edit file `src/lib/sources.js` — tambahkan objek baru ke array `MEDIA_SOURCES`
 - Kecepatan real-time tergantung seberapa cepat media mempublish RSS mereka (biasanya 1-5 menit)
 - Google Trends update ~15 menit
 - Beberapa media mungkin tidak menyediakan RSS feed (akan di-skip otomatis)
+
+## License
+
+ISC © 2026 M Alfath Ishari
